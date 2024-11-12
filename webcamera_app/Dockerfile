@@ -8,8 +8,8 @@ RUN pip install --upgrade pip && pip install pipenv
 COPY Pipfile Pipfile.lock ./
 RUN pipenv install --system --deploy
 
-COPY webcamera_app/app.py /app/app.py
-COPY webcamera_app/templates /app/templates
+COPY app.py /app/app.py
+COPY templates /app/templates
 
 
 EXPOSE 5454

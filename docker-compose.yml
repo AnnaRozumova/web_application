@@ -1,0 +1,24 @@
+version: '3.8'  
+
+services:
+  web_app:  
+    build:
+      context: ./
+    ports:
+      - "5000:5000"  
+    depends_on:
+      - webcamera_app  
+    networks:
+      - my_network  
+
+  webcamera_app:  
+    build:
+      context: ./webcamera_app  
+    ports:
+      - "5454:5454"  
+    networks:
+      - my_network  
+
+networks:
+  my_network:  
+    driver: bridge

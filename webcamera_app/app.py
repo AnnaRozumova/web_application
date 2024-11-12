@@ -1,4 +1,9 @@
-"""This is an app which statrs a web camera and make a picture of user. User can save the pic, otherwise, it will be deleted."""
+"""This is an app which statrs a web camera and make a picture of user. User can save the pic, otherwise, it will be deleted.
+To run this in docker container use(from webcamera_app directory):
+docker network create my_network
+docker build -t webcamera_app_image .
+docker run -d --name webcamera_app --network my_network -p 5454:5454 webcamera_app_image
+"""
 import os
 import time
 import datetime
