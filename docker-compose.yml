@@ -1,24 +1,43 @@
-version: '3.8'  
-
+version: '3'
 services:
-  web_app:  
+  main_app:
     build:
-      context: ./
-    ports:
-      - "5000:5000"  
-    depends_on:
-      - webcamera_app  
+      context: .  # Set context to root directory
+      dockerfile: ./main_app/Dockerfile
+    container_name: main_app
     networks:
-      - my_network  
+      - app-network
+    ports:
+      - "5000:5000"
 
-  webcamera_app:  
+  db_app:
     build:
-      context: ./webcamera_app  
-    ports:
-      - "5454:5454"  
+      context: .  # Set context to root directory
+      dockerfile: ./db_app/Dockerfile
+    container_name: db_app
     networks:
-      - my_network  
+      - app-network
+    ports:
+      - "5001:5001"
+
+  webcamera_app:
+    build:
+      context: .  # Set context to root directory
+      dockerfile: ./webcamera_app/Dockerfile
+    container_name: webcamera_app
+    networks:
+      - app-network
+    ports:
+      - "5454:5454"
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    networks:
+      - app-network
+    ports:
+      - "27017:27017"
 
 networks:
-  my_network:  
+  app-network:
     driver: bridge

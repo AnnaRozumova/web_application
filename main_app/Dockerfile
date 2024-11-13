@@ -3,8 +3,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for OpenCV and Pipenv
-RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 && rm -rf /var/lib/apt/lists/*
+# Upgrade pip and install pipenv
 RUN pip install --upgrade pip && pip install pipenv
 
 # Copy Pipfile and Pipfile.lock from the root directory
@@ -13,13 +12,14 @@ COPY ../Pipfile ../Pipfile.lock ./
 # Install dependencies in system mode (outside of virtualenv)
 RUN pipenv install --system --deploy
 
-# Copy the application code
-COPY webcamera_app/app.py ./
-COPY webcamera_app/templates /app/templates
+# Copy the application code and directories
+COPY main_app/main.py ./
+COPY main_app/templates/ templates/
+COPY main_app/static/ static/
 
-# Expose the application port
-EXPOSE 5454
+# Expose port 5000 for the Flask app
+EXPOSE 5000
 
 # Run the application directly with Python
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]
 
