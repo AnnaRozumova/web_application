@@ -8,13 +8,13 @@ RUN apt-get update && apt-get install -y libgl1 libglib2.0-0 && rm -rf /var/lib/
 RUN pip install --upgrade pip && pip install pipenv
 
 # Copy Pipfile and Pipfile.lock
-COPY ../Pipfile ../Pipfile.lock ./
+COPY Pipfile Pipfile.lock ./
 
 # Install dependencies with Pipenv in system mode
 RUN pipenv install --system --deploy
 
 # Copy the application code
-COPY db_app/db_app.py ./
+COPY db_app.py ./
 
 # Expose port for db_app microservice
 EXPOSE 5001

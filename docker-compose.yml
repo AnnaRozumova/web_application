@@ -1,9 +1,8 @@
-version: '3'
 services:
   main_app:
     build:
-      context: .  # Set context to root directory
-      dockerfile: ./main_app/Dockerfile
+      context: ./main_app
+      dockerfile: Dockerfile
     container_name: main_app
     networks:
       - app-network
@@ -12,8 +11,8 @@ services:
 
   db_app:
     build:
-      context: .  # Set context to root directory
-      dockerfile: ./db_app/Dockerfile
+      context: ./db_app 
+      dockerfile: Dockerfile
     container_name: db_app
     networks:
       - app-network
@@ -22,13 +21,17 @@ services:
 
   webcamera_app:
     build:
-      context: .  # Set context to root directory
-      dockerfile: ./webcamera_app/Dockerfile
+      context: ./webcamera_app
+      dockerfile: Dockerfile
     container_name: webcamera_app
     networks:
       - app-network
     ports:
       - "5454:5454"
+    volumes:
+      - uploads:/app/uploads
+    devices:
+      - "/dev/video0:/dev/video0"
 
   mongo:
     image: mongo
@@ -37,7 +40,13 @@ services:
       - app-network
     ports:
       - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  mongo_data:
+  uploads:

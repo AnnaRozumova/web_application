@@ -15,7 +15,7 @@ import cv2
 app = Flask(__name__)
 
 # Directory to save screenshots
-UPLOAD_FOLDER = './uploads'
+UPLOAD_FOLDER = '/app/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure upload directory exists
 
 # Function to delete a file after 1 minute
