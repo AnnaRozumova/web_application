@@ -16,7 +16,7 @@
             <p class="lead">You can make a nice picture of yourself just in a moment. Hit the button, if you want to save it. Otherwise it will be deleted from our server after 4 minutes.</p>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3">
               <button type="button" class="btn btn-primary btn-lg px-4 me-md-2 fw-bold" id="screenshot-btn">Smile and click</button>
-              <button type="button" class="btn btn-outline-secondary btn-lg px-4">Download</button>
+              <a type="button" class="btn btn-outline-secondary btn-lg px-4" id="download-btn" style="display:none">Download</a>
             </div>
           </div>
           <div class="col-10 col-sm-8 col-lg-6">
@@ -32,6 +32,11 @@
                     
                     $('#screenshot-img').attr('src', '/uploads/' + data.filename);
                     $('#screenshot-img').show();
+
+                    $('#download-btn').attr('href', '/download/' + data.filename);
+                    $('#download-btn').attr('download', data.filename);
+                    $('#download-btn').show();
+                    
                 } else {
                     alert('Failed to take screenshot');
                 }

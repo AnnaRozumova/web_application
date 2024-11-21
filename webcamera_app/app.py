@@ -16,16 +16,15 @@ app = Flask(__name__)
 
 # Directory to save screenshots
 UPLOAD_FOLDER = '/app/uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure upload directory exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  
 
-# Function to delete a file after 1 minute
+# Function to delete a file after 4 minute
 def delete_file_after_delay(filepath, delay=240):
-    time.sleep(delay)  # Wait for 'delay' seconds (4 minute)
+    time.sleep(delay)  
     if os.path.exists(filepath):
         os.remove(filepath)
         print(f"{filepath} has been deleted.")
 
-# Route to serve the home page
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -33,20 +32,16 @@ def index():
 # Route to take a screenshot
 @app.route('/take_screenshot', methods=['POST'])
 def take_screenshot():
-    # Initialize the webcam
     cap = cv2.VideoCapture(0)
 
-    # Check if the webcam opened successfully
     if not cap.isOpened():
         return jsonify({'error': 'Could not open webcam'}), 500
 
-    # Capture the screenshot
     ret, frame = cap.read()
 
     if not ret:
         return jsonify({'error': 'Failed to capture frame'}), 500
 
-    # Generate a unique filename based on the timestamp
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     screenshot_filename = f'screenshot_{timestamp}.png'
     screenshot_filepath = os.path.join(UPLOAD_FOLDER, screenshot_filename)
@@ -54,15 +49,19 @@ def take_screenshot():
     # Save the screenshot
     cv2.imwrite(screenshot_filepath, frame)
     print(f"File saved at {screenshot_filepath}")
-    cap.release()  # Release the webcam
+    cap.release()
 
-    # Start a background thread to delete the file after 1 minute
     threading.Thread(target=delete_file_after_delay, args=(screenshot_filepath,)).start()
 
-    # Return the filename so it can be displayed
     return jsonify({'filename': screenshot_filename}), 200
 
-# Route to serve the uploaded screenshot
+@app.route('/download/<filename>')
+def download_file(filename):
+    if filename:
+        return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+    else:
+        return jsonify({'error':'Your picture was deleted from the server. Please make another one'})
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)

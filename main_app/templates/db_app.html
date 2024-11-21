@@ -1,54 +1,178 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Client Database Management</title>
-</head>
-<body>
-    <h1>Client Database Management</h1>
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Client Database Management</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+		<noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/noscript.css') }}" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
 
-    <!-- Add Client Form -->
-    <h2>Add Client</h2>
-    <form action="/add_client" method="POST">
-        <input type="text" name="name" placeholder="Name" required>
-        <input type="text" name="surname" placeholder="Surname" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="text" name="shipping_address" placeholder="Shipping Address" required>
-        <input type="text" name="products" placeholder="Products (comma separated)">
-        <button type="submit">Add Client</button>
-    </form>
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
 
-    <!-- Search Clients Form -->
-    <h2>Search Clients</h2>
-    <form action="/search_clients" method="GET">
-        <input type="text" name="name" placeholder="Search by Name">
-        <input type="text" name="surname" placeholder="Search by Surname">
-        <input type="text" name="product" placeholder="Search by Product">
-        <button type="submit">Search</button>
-    </form>
+							<!-- Logo -->
+								<a href="{{ url_for('home') }}" class="logo">
+									<span class="symbol"><img src="{{ url_for('static', filename='images/logo.svg') }}" alt="" /></span><span class="title">Anna Rozumova</span><span class="subtitle">Junior Python Developer</span>
+								</a>
+<!--
+							
+								<nav>
+									<ul>
+										<li><a href="#menu">Menu</a></li>
+									</ul>
+								</nav>
 
-    <!-- Display Search Results -->
-    <div id="search-results">
-        <!-- Search results will be displayed here via JavaScript -->
-    </div>
+						</div>
+					</header>
 
-    <script>
-        // JavaScript to handle search and display results
-        document.querySelector('form[action="/search_clients"]').onsubmit = async function(e) {
-            e.preventDefault();
-            const form = e.target;
-            const name = form.name.value;
-            const surname = form.surname.value;
-            const product = form.product.value;
+				
+					<nav id="menu">
+						<h2>Menu</h2>
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li><a href="generic.html">Ipsum veroeros</a></li>
+							<li><a href="generic.html">Tempus etiam</a></li>
+							<li><a href="generic.html">Consequat dolor</a></li>
+							<li><a href="elements.html">Elements</a></li>
+						</ul>
+					</nav>
+				-->
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<h1>Client Database Management</h1>
+								<h2>Add Client</h2>
+								<form action="/add_client" method="POST">
+									<div class="row gtr-uniform">
+										<div class="col-6 col-12-xsmall">
+											<input type="text" name="name" placeholder="Name" required>
+										</div>
+										<div class="col-6 col-12-xsmall">
+											<input type="text" name="surname" placeholder="Surname" required>
+										</div>
+										<div class="col-6 col-12-xsmall">
+											<input type="email" name="email" placeholder="Email" required>
+										</div>
+										<div class="col-6 col-12-xsmall">
+											<input type="text" name="shipping_address" placeholder="Shipping Address" required>
+										</div>
+										<div class="col-6 col-12-xsmall">
+											<input type="text" name="products" placeholder="Products (comma separated)">
+										</div>
+										<div class="col-12">
+											<div class="actions">
+												<button type="submit" class="primary">Add Client</button>
+											</div>
+										</div>
+									</div>
+								</form>
+			
+								<h2>Search Clients</h2>
+								<form action="/search_clients" method="GET">
+									<div class="row gtr-uniform">
+										<div class="col-6 col-12-xsmall">
+											<input type="text" name="name" placeholder="Search by Name">
+										</div>
+										<div class="col-6 col-12-xsmall">
+											<input type="text" name="surname" placeholder="Search by Surname">
+										</div>
+										<div class="col-6 col-12-xsmall">
+											<input type="text" name="product" placeholder="Search by Product">
+										</div>
+										<div class="col-12">
+											<div class="actions">
+												<button type="submit" class="primary">Search</button>
+											</div>
+										</div>
+									</div>
+								</form>
+			
+								<!-- Display Search Results -->
+								<div id="search-results">
+									<blockquote>
+										<!-- Search results will be displayed here via JavaScript -->
+									</blockquote> 
+								</div>
+							</section>
+						</div>
+					</div>
+				</div>
+			
+				<script>
+					// JavaScript to handle search and display results
+					document.querySelector('form[action="/search_clients"]').onsubmit = async function(e) {
+						e.preventDefault();
+						const form = e.target;
+						const name = form.name.value;
+						const surname = form.surname.value;
+						const product = form.product.value;
+			
+						const response = await fetch(`/search_clients?name=${name}&surname=${surname}&product=${product}`);
+						const clients = await response.json();
+			
+						const resultsDiv = document.getElementById('search-results');
+						resultsDiv.innerHTML = clients.length ? `<h3>Results:</h3><ul>` + 
+							clients.map(client => `<li>${client.name} ${client.surname} - ${client.email}</li>`).join('') + 
+							`</ul>` : `<p>No results found</p>`;
+					};
+				</script>
+						</div>
+					</div>
 
-            const response = await fetch(`/search_clients?name=${name}&surname=${surname}&product=${product}`);
-            const clients = await response.json();
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<section>
+								<h2>Get in touch</h2>
+								<form method="post" action="#">
+									<div class="fields">
+										<div class="field half">
+											<input type="text" name="name" id="name" placeholder="Name" />
+										</div>
+										<div class="field half">
+											<input type="email" name="email" id="email" placeholder="Email" />
+										</div>
+										<div class="field">
+											<textarea name="message" id="message" placeholder="Message"></textarea>
+										</div>
+									</div>
+									<ul class="actions">
+										<li><input type="submit" value="Send" class="primary" /></li>
+									</ul>
+								</form>
+							</section>
+							<section>
+								<h2>Follow</h2>
+								<ul class="icons">
+									<li><a href="#" class="icon brands style2 fa-twitter"><span class="label">Twitter</span></a></li>
+									<li><a href="#" class="icon brands style2 fa-facebook-f"><span class="label">Facebook</span></a></li>
+									<li><a href="#" class="icon brands style2 fa-instagram"><span class="label">Instagram</span></a></li>
+									<li><a href="#" class="icon brands style2 fa-dribbble"><span class="label">Dribbble</span></a></li>
+									<li><a href="#" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									<li><a href="#" class="icon brands style2 fa-500px"><span class="label">500px</span></a></li>
+									<li><a href="#" class="icon solid style2 fa-phone"><span class="label">Phone</span></a></li>
+									<li><a href="#" class="icon solid style2 fa-envelope"><span class="label">Email</span></a></li>
+								</ul>
+							</section>
+							<ul class="copyright">
+								<li>&copy; Untitled. All rights reserved</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
 
-            const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = clients.length ? `<h3>Results:</h3><ul>` + 
-                clients.map(client => `<li>${client.name} ${client.surname} - ${client.email}</li>`).join('') + 
-                `</ul>` : `<p>No results found</p>`;
-        };
-    </script>
-</body>
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
 </html>
