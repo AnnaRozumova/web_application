@@ -43,6 +43,16 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  wiki_app:
+    build:
+      context: ./wiki_app
+      dockerfile: Dockerfile
+    container_name: wiki_app
+    networks:
+      - app-network
+    ports:
+      - "8000:8000"
+
 networks:
   app-network:
     driver: bridge

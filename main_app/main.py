@@ -22,6 +22,10 @@ def get_webcamera_pic():
 def db_app():
     return render_template('db_app.html')
 
+@app.route('/wiki_app')
+def wiki_app():
+    return redirect('http://localhost:8000')
+
 # Route to add a client via db_app microservice
 @app.route('/add_client', methods=['POST'])
 def add_client():
