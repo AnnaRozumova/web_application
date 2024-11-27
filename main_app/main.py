@@ -3,12 +3,14 @@ To build and run this in Docker container, use:
 docker build -t app_image .
 docker run -d --name app --network my_network -p 5000:5000 app_image
 """
+import os
 from flask import Flask, render_template, redirect, request, jsonify
 import requests
 
 app = Flask(__name__)
 
 DB_APP_URL = 'http://db_app:5001'
+app.secret_key = os.environ.get('SECRET_KEY')
 
 @app.route('/')
 def home():
@@ -26,7 +28,6 @@ def db_app():
 def wiki_app():
     return redirect('http://localhost:8000')
 
-# Route to add a client via db_app microservice
 @app.route('/add_client', methods=['POST'])
 def add_client():
     client_data = {
@@ -37,7 +38,10 @@ def add_client():
         "products": request.form.getlist("products")
     }
     response = requests.post(f'{DB_APP_URL}/add_client', json=client_data)
-    return jsonify(response.json()), response.status_code
+    if response.status_code == 201:
+        return jsonify({"success": True, "message": "Client added successfully!"})
+    else:
+        return jsonify({"success": False, "message": "Failed to add client."})
 
 # Route to update a client via db_app microservice
 @app.route('/update_client/<client_id>', methods=['POST'])
@@ -72,4 +76,4 @@ def search_clients():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
