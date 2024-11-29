@@ -1,24 +1,48 @@
-"""This is the main file, which run home page and has routs to other apps
+"""This is the main file, which has a frontend of apps.
 To build and run this in Docker container, use:
-docker build -t app_image .
-docker run -d --name app --network my_network -p 5000:5000 app_image
+docker compose up --build -d
 """
-import os
 from flask import Flask, render_template, redirect, request, jsonify
 import requests
 
 app = Flask(__name__)
 
 DB_APP_URL = 'http://db_app:5001'
-app.secret_key = os.environ.get('SECRET_KEY')
+WEBCAMERA_APP_URL = 'http://webcamera_app:5454'
 
 @app.route('/')
 def home():
     return render_template('home.html')
 
-@app.route('/webcamera-picture')
+@app.route('/webcamera-app')
 def get_webcamera_pic():
-    return redirect('http://localhost:5454')
+    return render_template('webcamera_app.html')
+
+@app.route('/take_screenshot', methods=['POST'])
+def take_screenshot():
+    response = requests.post(f'{WEBCAMERA_APP_URL}/take_screenshot')
+    return jsonify(response.json()), response.status_code
+
+@app.route('/download/<filename>', methods=['GET'])
+def download(filename):
+    response = requests.get(f'{WEBCAMERA_APP_URL}/download/{filename}')
+    if response.status_code == 200:
+        # Stream the file content from webcamera_app to the user
+        return response.content, 200, {
+            'Content-Disposition': f'attachment; filename={filename}',
+            'Content-Type': response.headers['Content-Type']
+        }
+    return jsonify({'error': 'File not found or already deleted.'}), response.status_code
+
+@app.route('/uploads/<filename>', methods=['GET'])
+def uploaded_file(filename):
+    response = requests.get(f'{WEBCAMERA_APP_URL}/uploads/{filename}')
+    if response.status_code == 200:
+        # Stream the file content to the user for inline viewing
+        return response.content, 200, {
+            'Content-Type': response.headers['Content-Type']
+        }
+    return jsonify({'error': 'File not found or already deleted.'}), response.status_code
 
 @app.route('/db_app')
 def db_app():

@@ -1,4 +1,4 @@
-"""This is an app which statrs a web camera and make a picture of user. User can save the pic, otherwise, it will be deleted.
+"""This is an app which activates a web camera and make a picture of user. User can save the pic, otherwise, it will be deleted.
 To run this in docker container use(from webcamera_app directory):
 docker network create my_network
 docker build -t webcamera_app_image .
@@ -24,10 +24,6 @@ def delete_file_after_delay(filepath, delay=240):
     if os.path.exists(filepath):
         os.remove(filepath)
         print(f"{filepath} has been deleted.")
-
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 # Route to take a screenshot
 @app.route('/take_screenshot', methods=['POST'])

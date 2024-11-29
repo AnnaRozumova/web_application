@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Take a Screenshot</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+        <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/noscript.css') }}" /></noscript>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+
+    <body class="is-preload">
+        <div id="wrapper">
+            <header id="header">
+                <div class="inner">
+
+                    <a href="{{ url_for('home') }}" class="logo">
+                        <span class="symbol"><img src="{{ url_for('static', filename='images/logo.svg') }}" alt="" /></span><span class="title">Anna Rozumova</span><span class="subtitle">Python Developer</span>
+                    </a>
+                </div>
+            </header>
+                <div id="main">
+                    <div class="inner">
+                        <h1>Take a Screenshot</h1>
+                            <p>You can make a nice picture of yourself just in a moment. Hit the button, if you want to save it. Otherwise it will be deleted from our server after 4 minutes.</p>
+                                <div class="col-12">
+                                    <div class="actions">
+                                        <button type="button" class="primary" id="screenshot-btn">Smile and click</button>
+                                    </div>
+                                    <a type="button" class="secondary" id="download-btn" style="display:none">Download</a>
+                                </div>       
+                        <span class="image main">
+                            <img id="screenshot-img" src="" alt="Your screenshot will appear here" style="display:none" width="700" height="500" loading="lazy">
+                        </span>
+                    </div>
+                </div>
+        </div>
+        <script>
+            $('#screenshot-btn').click(function() {
+                $.post('/take_screenshot', function(data) {
+                    if (data.filename) {
+                        
+                        $('#screenshot-img').attr('src', '/uploads/' + data.filename);
+                        $('#screenshot-img').show();
+
+                        $('#download-btn').attr('href', '/download/' + data.filename);
+                        $('#download-btn').attr('download', data.filename);
+                        $('#download-btn').show();
+                        
+                    } else {
+                        alert('Failed to take screenshot');
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
+
+

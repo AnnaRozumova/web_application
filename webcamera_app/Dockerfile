@@ -14,7 +14,6 @@ RUN pipenv install --system --deploy
 
 # Copy the application code
 COPY app.py ./
-COPY templates /app/templates
 
 # Expose the application port
 EXPOSE 5454
