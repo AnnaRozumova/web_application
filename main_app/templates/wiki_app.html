@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Wikipedia Article Fetcher</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/noscript.css') }}" /></noscript>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="is-preload">
+    <div id="wrapper">
+        <header id="header">
+            <div class="inner">
+
+                <a href="{{ url_for('home') }}" class="logo">
+                    <span class="symbol"><img src="{{ url_for('static', filename='images/logo.svg') }}" alt="" /></span><span class="title">Anna Rozumova</span><span class="subtitle">Python Developer</span>
+                </a>
+            </div>
+        </header>
+
+    <div id="main">
+        <div class="inner">
+            <h1>Wikipedia Article Fetcher</h1>
+            <form method="POST">
+                <div class="row gtr-uniform">
+                    <div class="col-6 col-12-xsmall">
+                        <label for="query">Enter a topic:</label>
+                        <input type="text" id="query" name="query" required>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
+
+            {% if error %}
+            <p class="error">{{ error }}</p>
+            {% endif %}
+
+            {% if title %}
+            <div class="article">
+                <h2>{{ title }}</h2>
+                {% if main_image %}
+                <img src="{{ main_image }}" alt="{{ title }}">
+                {% endif %}
+                <p>{{ summary }}</p>
+                <p><a href="{{ url }}" target="_blank">Read more on Wikipedia</a></p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -8,9 +8,8 @@ COPY Pipfile Pipfile.lock ./
 
 RUN pipenv install --system --deploy
 
-COPY main.py ./
-COPY templates /app/templates
+COPY wiki_app.py ./
 
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+CMD ["python", "wiki_app.py"]

@@ -9,6 +9,7 @@ app = Flask(__name__)
 
 DB_APP_URL = 'http://db_app:5001'
 WEBCAMERA_APP_URL = 'http://webcamera_app:5454'
+WIKI_APP_URL = 'http://wiki_app:8000'
 
 @app.route('/')
 def home():
@@ -48,9 +49,23 @@ def uploaded_file(filename):
 def db_app():
     return render_template('db_app.html')
 
-@app.route('/wiki_app')
+@app.route('/wiki_app', methods=['GET', 'POST'])
 def wiki_app():
-    return redirect('http://localhost:8000')
+    if request.method == 'POST':
+        query = request.form['query']
+
+        response = requests.post(f"{WIKI_APP_URL}/query", json={'query': query})
+
+        if response.status_code == 200:
+            data = response.json()
+            return render_template('wiki_app.html', title=data['title'], summary=data['summary'], url=data['url'], main_image=data['main_image'])
+        elif response.status_code == 404:
+            error_message = response.json().get('error', 'Article nor found.')
+            return render_template('wiki_app.html', error=error_message)
+        else:
+            return render_template('wiki_app.html', error="An error occured while fetching data.")
+
+    return render_template('wiki_app.html')
 
 @app.route('/add_client', methods=['POST'])
 def add_client():
