@@ -13,11 +13,11 @@ COPY Pipfile Pipfile.lock ./
 RUN pipenv install --system --deploy
 
 # Copy the application code
-COPY app.py ./
+COPY webcamera_app.py ./
 
 # Expose the application port
 EXPOSE 5454
 
 # Run the application directly with Python
-CMD ["python", "app.py"]
+CMD ["python", "webcamera_app.py"]
 

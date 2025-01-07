@@ -8,6 +8,8 @@ requests = "*"
 flask = "*"
 opencv-python = "*"
 pymongo = "*"
+boto3 = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

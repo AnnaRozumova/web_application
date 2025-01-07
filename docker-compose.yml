@@ -18,6 +18,8 @@ services:
       - app-network
     ports:
       - "5001:5001"
+    env_file:
+      - .env
 
   webcamera_app:
     build:
@@ -28,20 +30,10 @@ services:
       - app-network
     ports:
       - "5454:5454"
-    volumes:
-      - uploads:/app/uploads
+    env_file:
+      - .env
     devices:
       - "/dev/video0:/dev/video0"
-
-  mongo:
-    image: mongo
-    container_name: mongo
-    networks:
-      - app-network
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
 
   wiki_app:
     build:
@@ -58,5 +50,4 @@ networks:
     driver: bridge
 
 volumes:
-  mongo_data:
   uploads:

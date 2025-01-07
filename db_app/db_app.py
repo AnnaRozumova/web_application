@@ -1,74 +1,104 @@
+'''
+This is simple application, which has a database of 'clients' on DynamoDB AWS, 
+and user can add clients, update, search or delete them.
+'''
+import os
+import uuid
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
-from pymongo import MongoClient
+import boto3
+from boto3.dynamodb.conditions import Attr
+
+load_dotenv()
 
 app = Flask(__name__)
 
-# Set up MongoDB client (pointing to MongoDB Docker container)
-client = MongoClient('mongodb://mongo:27017/')
-db = client['e_shop']
-collection = db['clients']
+dynamodb = boto3.resource(
+    'dynamodb',
+    aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.environ.get('AWS_REGION'))
+table_name = 'clients'
+table = dynamodb.Table(table_name)
 
-@app.route('/add_client', methods=['POST'])
+try:
+    dynamodb.create_table(
+        TableName=table_name,
+        KeySchema=[{'AttributeName': 'client_id', 'KeyType': 'HASH'}],
+        AttributeDefinitions=[{'AttributeName': 'client_id', 'AttributeType': 'S'}],
+        BillingMode='PAY_PER_REQUEST'
+    )
+    print("Creating DynamoDB table...")
+    table.wait_until_exists()
+    print(f"Table '{table_name}' created successfully!")
+except boto3.exceptions.botocore.exceptions.ClientError:
+    print(f"Table '{table_name}' already exists.")
+
+
+@app.route('/add-client', methods=['POST'])
 def add_client():
     data = request.json
+    client_id = str(uuid.uuid4())
     client_data = {
+        "client_id": client_id,
         "name": data.get("name"),
         "surname": data.get("surname"),
         "email": data.get("email"),
         "shipping_address": data.get("shipping_address"),
         "products": data.get("products", [])
     }
-    result = collection.insert_one(client_data)
-    return jsonify({"message": "Client added successfully", "id": str(result.inserted_id)}), 201
+    table.put_item(Item=client_data)
+    return jsonify({"message": "Client added successfully", "id": client_id}), 201
 
-@app.route('/update_client/<client_id>', methods=['PUT'])
+@app.route('/update-client/<client_id>', methods=['PUT'])
 def update_client(client_id):
     data = request.json
-    update_fields = {
-        "name": data.get("name"),
-        "surname": data.get("surname"),
-        "email": data.get("email"),
-        "shipping_address": data.get("shipping_address"),
-        "products": data.get("products", [])
-    }
-    result = collection.update_one({"_id": client_id}, {"$set": update_fields})
-    if result.matched_count > 0:
+    update_expression = "SET " + ", ".join(f"#{k} = :{k}" for k in data.keys())
+    expression_attribute_names = {f"#{k}": k for k in data.keys()}
+    expression_attribute_values = {f":{k}": v for k, v in data.items()}
+    response = table.update_item(
+        Key={'client_id': client_id},
+        UpdateExpression=update_expression,
+        ExpressionAttributeNames=expression_attribute_names,
+        ExpressionAttributeValues=expression_attribute_values,
+        ReturnValues="UPDATED_NEW"
+    )
+    if response.get("Attributes"):
         return jsonify({"message": "Client updated successfully"}), 200
     else:
         return jsonify({"error": "Client not found"}), 404
 
-@app.route('/delete_client/<client_id>', methods=['DELETE'])
+@app.route('/delete-client/<client_id>', methods=['DELETE'])
 def delete_client(client_id):
-    result = collection.delete_one({"_id": client_id})
-    if result.deleted_count > 0:
+    response = table.delete_item(
+        Key={'client_id': client_id},
+        ReturnValues='ALL_OLD'
+    )
+    if 'Attributes' in response:
         return jsonify({"message": "Client deleted successfully"}), 200
-    else:
-        return jsonify({"error": "Client not found"}), 404
+    return jsonify({"error": "Client not found"}), 404
 
-@app.route('/search_clients', methods=['GET'])
+@app.route('/search-clients', methods=['GET'])
 def search_clients():
     name = request.args.get('name')
     surname = request.args.get('surname')
     product = request.args.get('product')
 
-    query = {}
+    filter_expression = None
     if name:
-        query["name"] = {"$regex": name, "$options": "i"}
+        filter_expression = Attr('name').contains(name)
     if surname:
-        query["surname"] = {"$regex": surname, "$options": "i"}
+        filter_expression = (filter_expression & Attr('surname').contains(surname)) if filter_expression else Attr('surname').contains(surname)
     if product:
-        query["products"] = {"$regex": product, "$options": "i"}
+        filter_expression = (filter_expression & Attr('products').contains(product)) if filter_expression else Attr('products').contains(product)
 
-    results = list(collection.find(query))
-    clients = [{
-        "_id": str(client["_id"]),
-        "name": client["name"],
-        "surname": client["surname"],
-        "email": client["email"],
-        "shipping_address": client["shipping_address"],
-        "products": client["products"]
-    } for client in results]
+    # Perform a scan with the filter
+    if filter_expression:
+        response = table.scan(FilterExpression=filter_expression)
+    else:
+        response = table.scan()
 
+    clients = response.get('Items', [])
     return jsonify(clients), 200
 
 if __name__ == '__main__':

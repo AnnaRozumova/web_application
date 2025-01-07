@@ -25,7 +25,7 @@
 							<h1>Client Database Management</h1>
 								<div id="message" style="display: none;"></div>
 								<h2>Add Client</h2>
-								<form id="add-client-form" action="/add_client" method="POST">
+								<form id="add-client-form" action="/add-client" method="POST">
 									<div class="row gtr-uniform">
 										<div class="col-6 col-12-xsmall">
 											<input type="text" name="name" placeholder="Name" required>
@@ -51,7 +51,7 @@
 								</form>
 			
 								<h2>Search Clients</h2>
-								<form action="/search_clients" method="GET">
+								<form action="/search-clients" method="GET">
 									<div class="row gtr-uniform">
 										<div class="col-6 col-12-xsmall">
 											<input type="text" name="name" placeholder="Search by Name">
@@ -83,14 +83,14 @@
 			
 				<script>
 					// JavaScript to handle search and display results
-					document.querySelector('form[action="/search_clients"]').onsubmit = async function(e) {
+					document.querySelector('form[action="/search-clients"]').onsubmit = async function(e) {
 						e.preventDefault();
 						const form = e.target;
 						const name = form.name.value;
 						const surname = form.surname.value;
 						const product = form.product.value;
 			
-						const response = await fetch(`/search_clients?name=${name}&surname=${surname}&product=${product}`);
+						const response = await fetch(`/search-clients?name=${name}&surname=${surname}&product=${product}`);
 						const clients = await response.json();
 			
 						const resultsDiv = document.getElementById('search-results');
@@ -104,7 +104,7 @@
 						const formData = new FormData(this); // Collect form data
 
 						// Send POST request using Fetch API
-						const response = await fetch('/add_client', {
+						const response = await fetch('/add-client', {
 							method: 'POST',
 							body: formData,
 						});
