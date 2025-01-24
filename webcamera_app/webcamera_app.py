@@ -19,6 +19,7 @@ S3_BASE_URL = f'https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com'
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
+print(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
 
 session = boto3.Session(
     aws_access_key_id=AWS_ACCESS_KEY_ID,
@@ -27,7 +28,7 @@ session = boto3.Session(
 )
 
 s3_client = session.client('s3')
-print(s3_client.list_buckets())
+#print(s3_client.list_buckets())
 
 def upload_to_s3(filepath, filename):
     try:
@@ -53,7 +54,7 @@ def generate_presigned_url(filename, expiration=3600):
         return None
 
 
-@app.route('/take_screenshot', methods=['POST'])
+@app.route('/take-screenshot', methods=['POST'])
 def take_screenshot():
     cap = cv2.VideoCapture(0)
 
