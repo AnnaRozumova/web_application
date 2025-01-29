@@ -25,11 +25,11 @@ class TestMainApp(unittest.TestCase):
         self.assertIn(b'Screenshot', response.data)
 
     @patch('requests.post')
-    def test_take_screenshot(self, mock_post):
+    def test_capture_photo(self, mock_post):
         '''Mock the external API for the POST request'''
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"status": "success"}       
-        response = self.client.post('/take-screenshot')
+        response = self.client.post('/capture-photo')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "success"})
 

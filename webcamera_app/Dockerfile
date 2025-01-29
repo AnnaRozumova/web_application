@@ -14,6 +14,8 @@ RUN pipenv install --system --deploy
 
 # Copy the application code
 COPY webcamera_app.py ./
+COPY camera_controller.py ./
+COPY s3_handler.py ./
 
 # Expose the application port
 EXPOSE 5454

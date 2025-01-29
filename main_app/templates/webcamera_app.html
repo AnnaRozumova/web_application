@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>Take a Screenshot</title>
+        <title>Capture a photo</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
         <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
@@ -21,8 +21,9 @@
             </header>
                 <div id="main">
                     <div class="inner">
-                        <h1>Take a Screenshot</h1>
-                            <p>You can make a nice picture of yourself just in a moment. Hit the button, if you want to save it. Otherwise it will be deleted from our server after 4 minutes.</p>
+                        <h1>Capture a photo</h1>
+                        <h3>*GDPR friendly option</h3>
+                            <p>You can make a nice picture of yourself just in a moment. No worries, it will not be saved on any server. You are the only one who can download it; otherwise, it will disappear.</p>
                                 <div class="col-12">
                                     <div class="actions">
                                         <button type="button" class="button primary" id="screenshot-btn">Smile and click</button>
@@ -38,8 +39,8 @@
         <script>
             $(document).ready(function () {
                 $('#screenshot-btn').click(function () {
-                    // Send POST request to take_screenshot endpoint
-                    $.post('/take-screenshot', function (data) {
+                    // Send POST request to capture_photo endpoint
+                    $.post('/capture-photo', function (data) {
                         if (data.url && data.download_url) {
                             // Update image source with the URL for inline viewing
                             $('#screenshot-img').attr('src', data.url).show();

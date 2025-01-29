@@ -19,9 +19,9 @@ def home():
 def get_webcamera_pic():
     return render_template('webcamera_app.html')
 
-@app.route('/take-screenshot', methods=['POST'])
-def take_screenshot():
-    response = requests.post(f'{WEBCAMERA_APP_URL}/take-screenshot')
+@app.route('/capture-photo', methods=['POST'])
+def capture_photo():
+    response = requests.post(f'{WEBCAMERA_APP_URL}/capture-photo')
     return jsonify(response.json()), response.status_code
 
 @app.route('/download/<filename>', methods=['GET'])
