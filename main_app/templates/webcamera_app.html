@@ -22,38 +22,86 @@
                 <div id="main">
                     <div class="inner">
                         <h1>Capture a photo</h1>
-                        <h3>*GDPR friendly option</h3>
-                            <p>You can make a nice picture of yourself just in a moment. No worries, it will not be saved on any server. You are the only one who can download it; otherwise, it will disappear.</p>
+                            <p>You can make a nice picture of yourself just in a moment. If you push the first button "Smile and click", it will not be saved on any server. You will be the only one who can download it; otherwise, it will disappear.</p>
+                            <p>In case you would like us to keep the photo on our server take the second button "Capture and save".</p>
+                            <p>*Second option is not availible at the moment due to GDPR</p>
                                 <div class="col-12">
-                                    <div class="actions">
-                                        <button type="button" class="button primary" id="screenshot-btn">Smile and click</button>
-                                    </div>
-                                    <a type="button" class="button" id="download-btn" style="display:none">Download</a>
-                                </div>       
-                        <span class="image">
-                            <img id="screenshot-img" src="" alt="Your screenshot will appear here" style="display:none" width="700" height="500" loading="lazy">
-                        </span>
+                                    <ul class="actions">
+                                        <li><button type="button" class="button primary" id="capture-btn">Smile and click</button></li>
+                                        <li><a type="button" class="button" id="download-btn" style="display:none">Download</a></li>      
+                                        <li>    
+                                            <span class="image">
+                                                <img id="temporary-img" src="" alt="Your photo will appear here" style="display:none" width="700" height="500" loading="lazy">
+                                            </span>
+                                        </li>
+                                    </ul>
+                                    <ul class="actions">
+                                        <li><button type="button" class="button primary" id="capture-and-save-btn" disabled>Capture and save</button></li>
+                                        <li><a type="button" class="button" id="download-saved-photo-btn" style="display:none">Download</a></li>
+                                        <li>     
+                                            <span class="image">
+                                                <img id="saved-img" src="" alt="Your photo will appear here" style="display:none" width="700" height="500" loading="lazy">
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>    
                     </div>
                 </div>
         </div>
         <script>
             $(document).ready(function () {
-                $('#screenshot-btn').click(function () {
-                    // Send POST request to capture_photo endpoint
-                    $.post('/capture-photo', function (data) {
+                $('#capture-and-save-btn').click(function () {
+                    $.post('/capture-and-save-photo', function (data) {
                         if (data.url && data.download_url) {
-                            // Update image source with the URL for inline viewing
-                            $('#screenshot-img').attr('src', data.url).show();
-
-                            // Update download link with pre-signed URL
-                            $('#download-btn').attr('href', data.download_url);
-                            $('#download-btn').attr('download', 'screenshot.png');
-                            $('#download-btn').show();
+                            $('#saved-img').attr('src', data.url).show();
+                            $('#download-saved-photo-btn').attr('href', data.download_url);
+                            $('#download-saved-photo-btn').attr('download', 'saved.jpg');
+                            $('#download-saved-photo-btn').show();
                         } else {
-                            alert('Failed to take screenshot. Please try again.');
+                            alert('Failed to take photo. Please try again.');
                         }
                     }).fail(function () {
-                        alert('An error occurred while taking the screenshot.');
+                        alert('An error occurred while taking the photo.');
+                    });
+                });
+            });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const captureBtn = document.getElementById("capture-btn");
+                const tempImg = document.getElementById("temporary-img");
+                const downloadBtn = document.getElementById("download-btn");
+
+                captureBtn.addEventListener("click", function () {
+                    captureBtn.disabled = true;
+                    captureBtn.textContent = "Capturing...";
+
+                    fetch("/capture-photo", {
+                        method: "POST",
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("Failed to capture image");
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const imageUrl = URL.createObjectURL(blob);
+                        tempImg.src = imageUrl;
+                        tempImg.style.display = "block";
+
+                        downloadBtn.style.display = "inline-block";
+                        downloadBtn.href = imageUrl;
+                        downloadBtn.download = "captured_image.jpg";
+
+                        captureBtn.disabled = false;
+                        captureBtn.textContent = "Smile and click";
+                    })
+                    .catch(error => {
+                        console.error("Error capturing image:", error);
+                        alert("Error capturing image. Please try again.");
+                        
+                        captureBtn.disabled = false;
+                        captureBtn.textContent = "Smile and click";
                     });
                 });
             });
