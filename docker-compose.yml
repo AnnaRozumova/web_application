@@ -8,6 +8,8 @@ services:
       - app-network
     ports:
       - "5000:5000"
+    env_file:
+      - .env
 
   db_app:
     build:

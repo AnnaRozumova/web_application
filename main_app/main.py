@@ -2,8 +2,13 @@
 To build and run this in Docker container, use:
 docker compose up --build -d
 """
+import os
 from flask import Flask, render_template, redirect, request, jsonify, Response
+from dotenv import load_dotenv
 import requests
+from flask_mail import Mail, Message
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -11,9 +16,42 @@ DB_APP_URL = 'http://db_app:5001'
 WEBCAMERA_APP_URL = 'http://webcamera_app:5454'
 WIKI_APP_URL = 'http://wiki_app:8000'
 
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'  
+app.config['MAIL_PORT'] = 587  
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+
+mail = Mail(app)
+
 @app.route('/')
 def home():
     return render_template('home.html')
+
+@app.route('/send-email', methods=['POST'])
+def send_email():
+    try:
+        name = request.form.get('name')
+        sender_email = request.form.get('email')
+        message_text = request.form.get('message')
+
+        if not name or not sender_email or not message_text:
+            return jsonify({'error': 'Missing form fields'}), 400
+        
+        msg = Message(
+            subject=f"New Contact Form Submission from {name}",
+            sender=sender_email,
+            recipients=[os.getenv('MAIL_USERNAME')],
+            body=f"Name: {name}\Email: {sender_email}\n\nMessage:\n{message_text}"
+        )
+
+        mail.send(msg)
+
+        return jsonify({'success': 'Email sent successfully!'}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/webcamera-app')
 def get_webcamera_pic():
@@ -82,7 +120,6 @@ def add_client():
     else:
         return jsonify({"success": False, "message": "Failed to add client."})
 
-# Route to update a client via db_app microservice
 @app.route('/update-client/<client_id>', methods=['POST'])
 def update_client(client_id):
     update_data = {
@@ -95,13 +132,11 @@ def update_client(client_id):
     response = requests.put(f'{DB_APP_URL}/update-client/{client_id}', json=update_data, timeout=2)
     return jsonify(response.json()), response.status_code
 
-# Route to delete a client via db_app microservice
 @app.route('/delete-client/<client_id>', methods=['DELETE'])
 def delete_client(client_id):
     response = requests.delete(f'{DB_APP_URL}/delete-client/{client_id}', timeout=2)
     return jsonify(response.json()), response.status_code
 
-# Route to search clients via db_app microservice
 @app.route('/search-clients', methods=['GET'])
 def search_clients():
     params = {

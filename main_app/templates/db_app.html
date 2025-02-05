@@ -99,19 +99,17 @@
 							`</ul>` : `<p>No results found</p>`;
 					};
 					document.getElementById('add-client-form').addEventListener('submit', async function (e) {
-						e.preventDefault(); // Prevent default form submission
+						e.preventDefault(); 
 
-						const formData = new FormData(this); // Collect form data
+						const formData = new FormData(this); 
 
-						// Send POST request using Fetch API
 						const response = await fetch('/add-client', {
 							method: 'POST',
 							body: formData,
 						});
 
-						const result = await response.json(); // Parse JSON response
+						const result = await response.json(); 
 
-						// Display the message
 						const messageDiv = document.getElementById('message');
 						messageDiv.style.display = 'block';
 						messageDiv.style.color = result.success ? 'green' : 'red';
