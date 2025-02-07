@@ -12,9 +12,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
-DB_APP_URL = 'http://db_app:5001'
-WEBCAMERA_APP_URL = 'http://webcamera_app:5454'
-WIKI_APP_URL = 'http://wiki_app:8000'
+DB_APP_URL = os.getenv('DB_APP_URL', 'http://db_app:5001')
+WEBCAMERA_APP_URL = os.getenv('WEBCAMERA_APP_URL', 'http://webcamera_app:5454')
+WIKI_APP_URL = os.getenv('WIKI_APP_URL', 'http://wiki_app:8000')
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'  
 app.config['MAIL_PORT'] = 587  
