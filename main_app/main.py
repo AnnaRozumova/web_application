@@ -60,7 +60,7 @@ def get_webcamera_pic():
 @app.route('/capture-photo', methods=['POST'])
 def capture_photo():
     try:
-        response = requests.post(f"{WEBCAMERA_APP_URL}/capture-photo", timeout=2)
+        response = requests.post(f"{WEBCAMERA_APP_URL}/capture-photo", timeout=20)
 
         if response.status_code == 200:
             return Response(response.content, content_type=response.headers['Content-Type'])
@@ -72,12 +72,12 @@ def capture_photo():
 
 @app.route('/capture-and-save-photo', methods=['POST'])
 def capture_and_save_photo():
-    response = requests.post(f'{WEBCAMERA_APP_URL}/capture-and-save-photo', timeout=2)
+    response = requests.post(f'{WEBCAMERA_APP_URL}/capture-and-save-photo', timeout=20)
     return jsonify(response.json()), response.status_code
 
 @app.route('/download/<filename>', methods=['GET'])
 def download(filename):
-    response = requests.get(f'{WEBCAMERA_APP_URL}/download/{filename}', timeout=2)
+    response = requests.get(f'{WEBCAMERA_APP_URL}/download/{filename}', timeout=20)
     if response.status_code == 200:
         url = response.json().get('url')
         return redirect(url)
@@ -88,7 +88,7 @@ def wiki_app():
     if request.method == 'POST':
         query = request.form['query']
 
-        response = requests.post(f"{WIKI_APP_URL}/query", json={'query': query}, timeout=3)
+        response = requests.post(f"{WIKI_APP_URL}/query", json={'query': query}, timeout=30)
 
         if response.status_code == 200:
             data = response.json()
@@ -114,7 +114,7 @@ def add_client():
         "shipping_address": request.form.get("shipping_address"),
         "products": request.form.getlist("products")
     }
-    response = requests.post(f'{DB_APP_URL}/add-client', json=client_data, timeout=2)
+    response = requests.post(f'{DB_APP_URL}/add-client', json=client_data, timeout=30)
     if response.status_code == 201:
         return jsonify({"success": True, "message": "Client added successfully!"})
     else:
@@ -129,12 +129,12 @@ def update_client(client_id):
         "shipping_address": request.form.get("shipping_address"),
         "products": request.form.getlist("products")
     }
-    response = requests.put(f'{DB_APP_URL}/update-client/{client_id}', json=update_data, timeout=2)
+    response = requests.put(f'{DB_APP_URL}/update-client/{client_id}', json=update_data, timeout=30)
     return jsonify(response.json()), response.status_code
 
 @app.route('/delete-client/<client_id>', methods=['DELETE'])
 def delete_client(client_id):
-    response = requests.delete(f'{DB_APP_URL}/delete-client/{client_id}', timeout=2)
+    response = requests.delete(f'{DB_APP_URL}/delete-client/{client_id}', timeout=30)
     return jsonify(response.json()), response.status_code
 
 @app.route('/search-clients', methods=['GET'])
@@ -144,10 +144,10 @@ def search_clients():
         "surname": request.args.get("surname"),
         "product": request.args.get("product")
     }
-    response = requests.get(f'{DB_APP_URL}/search-clients', params=params, timeout=2)
+    response = requests.get(f'{DB_APP_URL}/search-clients', params=params, timeout=30)
     return jsonify(response.json()), response.status_code
 
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
