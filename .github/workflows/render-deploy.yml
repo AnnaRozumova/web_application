@@ -1,0 +1,38 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - master  
+jobs:
+  deploy-microservices:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render Deployment for db_app
+        env:
+          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL_DB_APP }}
+        run: |
+          curl "$deploy_url"
+
+      - name: Trigger Render Deployment for webcamera_app
+        env:
+          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL_WEBCAMERA_APP }}
+        run: |
+          curl "$deploy_url"
+
+      - name: Trigger Render Deployment for wiki_app
+        env:
+          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL_WIKI_APP }}
+        run: |
+          curl "$deploy_url"
+
+  deploy-main-app:
+    needs: deploy-microservices
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deployment for Main App
+        env:
+          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL_MAIN_APP }}
+        run: |
+          curl "$deploy_url"
