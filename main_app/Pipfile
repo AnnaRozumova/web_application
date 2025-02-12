@@ -11,6 +11,7 @@ pymongo = "*"
 boto3 = "*"
 python-dotenv = "*"
 flask-mail = "*"
+flask-cors = "*"
 
 [dev-packages]
 

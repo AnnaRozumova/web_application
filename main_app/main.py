@@ -7,10 +7,12 @@ from flask import Flask, render_template, redirect, request, jsonify
 from dotenv import load_dotenv
 import requests
 from flask_mail import Mail, Message
+from flask_cors import CORS
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 DB_APP_URL = os.getenv('DB_APP_URL', 'http://db_app:5001')
 WEBCAMERA_APP_URL = os.getenv('WEBCAMERA_APP_URL', 'http://webcamera_app:5454')
