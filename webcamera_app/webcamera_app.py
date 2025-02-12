@@ -1,48 +1,41 @@
 """This is an app which activates a web camera and make a picture of user. User can save the pic, otherwise, it will be deleted.
 """
 import datetime
-from flask import Flask, jsonify, Response
-from camera_controller import CameraController
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from s3_handler import S3Handler
 
 app = Flask(__name__)
-
-@app.route('/capture-photo', methods=["POST"])
-def capture_photo():
-    '''Function captures the photo and returns responce for frontend'''
-    try:
-        image_bytes = CameraController.capture_frame()
-        return Response(image_bytes, content_type='image/jpeg')
-    except ValueError as ve:
-        return jsonify({'error': str(ve)}), 500
-    except RuntimeError as re:
-        return jsonify({'error': str(re)}), 500
-    except Exception as e:
-        return jsonify({'error': 'Unexpected error: ' + str(e)}), 500
-
-
-
 s3_handler = S3Handler()
+CORS(app)
 
-@app.route('/capture-and-save-photo', methods=['POST'])
-def capture_and_save_photo():
-    '''Function captures the photo, saves it in s3 bucket and returns url of the image'''
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    '''Receives an image from the frontend and uploads it directly to S3.'''
     try:
-        image_bytes = CameraController.capture_frame()
+        print("Received request to /upload")  # Debugging log
+        
+        if 'image' not in request.files:
+            print("No image file in request")  # Debugging log
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        image = request.files['image']
+        print(f"Image received: {image.filename}")  # Debugging log
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         object_name = f'image_{timestamp}.jpg'
+
         url = s3_handler.upload_bytes_and_get_presigned_url(
-            image_bytes=image_bytes,
+            image_bytes=image.read(),
             object_name=object_name
         )
 
-        return jsonify({'url': url, 'download_url': url})
+        print(f"Upload successful. URL: {url}")  # Debugging log
+        return jsonify({'url': url, 'download_url': url}), 200
 
-    except RuntimeError as re:
-        raise HTTPException(status_code=500, detail=str(re))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Upload failed: {str(e)}")  # Debugging log
+        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5454)

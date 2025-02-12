@@ -22,87 +22,86 @@
                 <div id="main">
                     <div class="inner">
                         <h1>Capture a photo</h1>
-                            <p>You can make a nice picture of yourself just in a moment. If you push the first button "Smile and click", it will not be saved on any server. You will be the only one who can download it; otherwise, it will disappear.</p>
-                            <p>In case you would like us to keep the photo on our server take the second button "Capture and save".</p>
-                            <p>*Second option is not availible at the moment due to GDPR</p>
+                            <p>You can make a nice picture of yourself just in a moment. After you push the button, we will show you the preview. And you have possibility to download it. After 5 minutes it will be deleted from our server.</p>
                                 <div class="col-12">
+                                    <video id="video" autoplay style="display:none;"></video>
                                     <ul class="actions">
-                                        <li><button type="button" class="button primary" id="capture-btn">Smile and click</button></li>
+                                        <li><button type="button" class="button primary" id="capture-btn">Capture and save</button></li>
                                         <li><a type="button" class="button" id="download-btn" style="display:none">Download</a></li>      
-                                        <li>    
+                                        <canvas id="canvas" style="display:none;"></canvas>   
                                             <span class="image">
-                                                <img id="temporary-img" src="" alt="Your photo will appear here" style="display:none" width="700" height="500" loading="lazy">
+                                                <img id="uploaded-img" src="" alt="Your photo will appear here" style="display:none" width="700" height="500" loading="lazy">
                                             </span>
-                                        </li>
-                                    </ul>
-                                    <ul class="actions">
-                                        <li><button type="button" class="button primary" id="capture-and-save-btn">Capture and save</button></li>
-                                        <li><a type="button" class="button" id="download-saved-photo-btn" style="display:none">Download</a></li>
-                                        <li>     
-                                            <span class="image">
-                                                <img id="saved-img" src="" alt="Your photo will appear here" style="display:none" width="700" height="500" loading="lazy">
-                                            </span>
-                                        </li>
                                     </ul>
                                 </div>    
                     </div>
                 </div>
         </div>
         <script>
-            $(document).ready(function () {
-                $('#capture-and-save-btn').click(function () {
-                    $.post('/capture-and-save-photo', function (data) {
-                        if (data.url && data.download_url) {
-                            $('#saved-img').attr('src', data.url).show();
-                            $('#download-saved-photo-btn').attr('href', data.download_url);
-                            $('#download-saved-photo-btn').attr('download', 'saved.jpg');
-                            $('#download-saved-photo-btn').show();
-                        } else {
-                            alert('Failed to take photo. Please try again.');
-                        }
-                    }).fail(function () {
-                        alert('An error occurred while taking the photo.');
-                    });
-                });
-            });
-
             document.addEventListener("DOMContentLoaded", function () {
                 const captureBtn = document.getElementById("capture-btn");
-                const tempImg = document.getElementById("temporary-img");
+                const canvas = document.getElementById("canvas");
+                const uploadedImg = document.getElementById("uploaded-img");
                 const downloadBtn = document.getElementById("download-btn");
+
+                const WEBCAMERA_APP_URL = "{{ WEBCAMERA_APP_URL }}";
 
                 captureBtn.addEventListener("click", function () {
                     captureBtn.disabled = true;
-                    captureBtn.textContent = "Capturing...";
+                    captureBtn.textContent = "Accessing Camera...";
 
-                    fetch("/capture-photo", {
-                        method: "POST",
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error("Failed to capture image");
-                        }
-                        return response.blob();
-                    })
-                    .then(blob => {
-                        const imageUrl = URL.createObjectURL(blob);
-                        tempImg.src = imageUrl;
-                        tempImg.style.display = "block";
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            let video = document.createElement("video");
+                            video.srcObject = stream;
 
-                        downloadBtn.style.display = "inline-block";
-                        downloadBtn.href = imageUrl;
-                        downloadBtn.download = "captured_image.jpg";
+                            video.onloadedmetadata = () => {
+                                video.play();
 
-                        captureBtn.disabled = false;
-                        captureBtn.textContent = "Smile and click";
-                    })
-                    .catch(error => {
-                        console.error("Error capturing image:", error);
-                        alert("Error capturing image. Please try again.");
-                        
-                        captureBtn.disabled = false;
-                        captureBtn.textContent = "Smile and click";
-                    });
+                                setTimeout(() => {
+                                    canvas.width = video.videoWidth;
+                                    canvas.height = video.videoHeight;
+                                    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                                    stream.getTracks().forEach(track => track.stop());
+
+                                    canvas.toBlob(blob => {
+                                        const formData = new FormData();
+                                        formData.append("image", blob, "photo.jpg");
+
+                                        fetch(`${WEBCAMERA_APP_URL}/upload`, { method: "POST", body: formData })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.url) {
+                                                    uploadedImg.src = data.url;
+                                                    uploadedImg.style.display = "block";
+
+                                                    downloadBtn.href = data.url;
+                                                    downloadBtn.download = "captured_image.jpg";
+                                                    downloadBtn.style.display = "inline-block";
+                                                } else {
+                                                    alert("Upload failed. Please try again.");
+                                                }
+
+                                                captureBtn.disabled = false;
+                                                captureBtn.textContent = "Capture Another";
+                                            })
+                                            .catch(error => {
+                                                console.error("Upload error:", error);
+                                                alert("Error uploading image. Please try again.");
+                                                captureBtn.disabled = false;
+                                                captureBtn.textContent = "Capture Another";
+                                            });
+                                    });
+                                }, 500);
+                            };
+                        })
+                        .catch(err => {
+                            console.error("Webcam access denied", err);
+                            alert("Webcam access is required to take a photo.");
+                            captureBtn.disabled = false;
+                            captureBtn.textContent = "Capture";
+                        });
                 });
             });
         </script>

@@ -1,3 +1,4 @@
+'''This module can be used in case of running application from local machine.'''
 import cv2
 
 

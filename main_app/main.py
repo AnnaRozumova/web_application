@@ -3,7 +3,7 @@ To build and run this in Docker container, use:
 docker compose up --build -d
 """
 import os
-from flask import Flask, render_template, redirect, request, jsonify, Response
+from flask import Flask, render_template, redirect, request, jsonify
 from dotenv import load_dotenv
 import requests
 from flask_mail import Mail, Message
@@ -55,25 +55,22 @@ def send_email():
 
 @app.route('/webcamera-app')
 def get_webcamera_pic():
-    return render_template('webcamera_app.html')
+    return render_template('webcamera_app.html', WEBCAMERA_APP_URL=WEBCAMERA_APP_URL)
 
-@app.route('/capture-photo', methods=['POST'])
-def capture_photo():
+@app.route('/upload', methods=['POST'])
+def upload_photo():
+    '''Receives an image from the frontend and forwards it to the webcamera service'''
     try:
-        response = requests.post(f"{WEBCAMERA_APP_URL}/capture-photo", timeout=20)
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
 
-        if response.status_code == 200:
-            return Response(response.content, content_type=response.headers['Content-Type'])
-        else:
-            return jsonify({'error': 'Failed to capture photo', 'details': response.json()}), response.status_code
+        files = {'image': (request.files['image'].filename, request.files['image'].read(), 'image/jpeg')}
+        response = requests.post(f'{WEBCAMERA_APP_URL}/upload', files=files, timeout=30)
+
+        return jsonify(response.json()), response.status_code
 
     except requests.exceptions.RequestException as e:
-        return jsonify({'error': 'Service unavailable', 'details': str(e)}), 500
-
-@app.route('/capture-and-save-photo', methods=['POST'])
-def capture_and_save_photo():
-    response = requests.post(f'{WEBCAMERA_APP_URL}/capture-and-save-photo', timeout=20)
-    return jsonify(response.json()), response.status_code
+        return jsonify({'error': 'Webcamera service unavailable', 'details': str(e)}), 500
 
 @app.route('/download/<filename>', methods=['GET'])
 def download(filename):
@@ -150,4 +147,4 @@ def search_clients():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)
