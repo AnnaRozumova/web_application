@@ -3,8 +3,3 @@ run-docker:
 
 remove-docker:
 	docker compose down
-
-
-	
-
-#https://signin.aws.amazon.com/switchrole?roleName=S3-DynamoDB-full&account=541668764077
