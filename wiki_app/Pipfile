@@ -8,6 +8,7 @@ wikipedia-api = "*"
 flask = "*"
 requests = "*"
 beautifulsoup4 = "*"
+mypy = "*"
 
 [dev-packages]
 

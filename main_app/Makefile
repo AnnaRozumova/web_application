@@ -1,0 +1,18 @@
+lint:
+	pipenv run pylint main.py || [ $$? -lt 32 ]
+
+type-check:
+	pipenv run mypy main.py
+
+lint-all:
+	pipenv run pylint main.py
+	pipenv run mypy main.py
+
+install-env:
+	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
+
+lock-env:
+	pipenv lock
+
+remove-env:
+	pipenv --rm || echo "Environment not found"
