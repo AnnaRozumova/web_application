@@ -22,10 +22,10 @@ def query_wikipedia() -> Response:
     query = data.get('query', '')
 
     if not query:
-        return make_response(jsonify({'error': 'No query provided'}), 400)
+        return jsonify({'error': 'No query provided'})
     page = wiki_wiki.page(query)
     if not page.exists():
-        return make_response(jsonify({'error': f"No article found for '{query}'"}), 404)
+        return jsonify({'error': f"No article found for '{query}'"})
 
     title = page.title
     raw_summary = page.summary[:500] + "..." if len(page.summary) > 500 else page.summary
