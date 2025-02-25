@@ -8,6 +8,9 @@ lint-all:
 	pipenv run pylint db_app.py
 	pipenv run mypy db_app.py
 
+test:
+	pipenv run pytest tests/
+
 install-env:
 	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 

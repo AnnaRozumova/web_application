@@ -30,7 +30,6 @@ try:
         BillingMode='PAY_PER_REQUEST'
     )
     print("Creating DynamoDB table...")
-    table.wait_until_exists()
     print(f"Table '{TABLE_NAME}' created successfully!")
 except boto3.exceptions.botocore.exceptions.ClientError:
     print(f"Table '{TABLE_NAME}' already exists.")
@@ -110,4 +109,4 @@ def search_clients() -> tuple[Response, int]:
     return jsonify(clients), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5001, debug=True)
