@@ -3348,3 +3348,12 @@ input, select, textarea {
 			}
 
 		}
+
+		.styled-block {
+			-webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+			margin: 0 0 2em 0;
+			background: #f4f4f4; /* Light background like <pre> */
+			border: 1px solid #ddd;
+			padding: 1em 1.5em;
+		}
+		

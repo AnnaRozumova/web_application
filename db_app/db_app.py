@@ -8,7 +8,7 @@ from typing import Optional, Any
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, Response
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 
 load_dotenv()
 
@@ -19,94 +19,149 @@ dynamodb = boto3.resource(
     aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
     aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
     region_name=os.environ.get('AWS_REGION'))
-TABLE_NAME = 'clients'
-table = dynamodb.Table(TABLE_NAME)
 
-try:
-    dynamodb.create_table(
-        TableName=TABLE_NAME,
-        KeySchema=[{'AttributeName': 'client_id', 'KeyType': 'HASH'}],
-        AttributeDefinitions=[{'AttributeName': 'client_id', 'AttributeType': 'S'}],
-        BillingMode='PAY_PER_REQUEST'
-    )
-    print("Creating DynamoDB table...")
-    print(f"Table '{TABLE_NAME}' created successfully!")
-except boto3.exceptions.botocore.exceptions.ClientError:
-    print(f"Table '{TABLE_NAME}' already exists.")
+customer_table = dynamodb.Table('customers')
+purchase_table = dynamodb.Table("purchases")
+product_table = dynamodb.Table("products")
+
+@app.route('/all-customers', methods=['GET'])
+def list_all_customers():
+    '''This function will list all the customers.'''
+    response = customer_table.scan()
+    customers = response.get('Items', [])
+    return jsonify(customers), 200
+
+@app.route('/all-products', methods=['GET'])
+def list_all_products():
+    '''This function will list all available products.'''
+    response = product_table.scan()
+    products = response.get('Items', [])
+    return jsonify(products), 200
+
+@app.route('/all-purchases', methods=['GET'])
+def list_all_purchases():
+    '''This function will list all purchases.'''
+    response = purchase_table.scan()
+    purchases = response.get('Items', [])
+    return jsonify(purchases), 200
 
 
-@app.route('/add-client', methods=['POST'])
-def add_client() -> tuple[Response, int]:
-    '''Add client to the DataBase'''
-    data: Optional[dict[str, Any]] = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid input"}), 400
-    client_id: str = str(uuid.uuid4())
-    client_data = {
-        "client_id": client_id,
-        "name": data.get("name"),
-        "surname": data.get("surname"),
-        "email": data.get("email"),
-        "shipping_address": data.get("shipping_address"),
-        "products": data.get("products", [])
-    }
-    table.put_item(Item=client_data)
-    return jsonify({"message": "Client added successfully", "id": client_id}), 201
+@app.route('/get-product', methods=['GET'])
+def get_product():
+    '''Check if a product exists in the database using Query instead of Scan'''
+    product_name = request.args.get("name")
+    
+    if not product_name:
+        return jsonify({"error": "Product name is required"}), 400
 
-@app.route('/update-client/<client_id>', methods=['PUT'])
-def update_client(client_id: str) -> tuple[Response, int]:
-    '''Fetch the client by ID, update data'''
-    data: Optional[dict[str, Any]] = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid input"}), 400
-    update_expression = "SET " + ", ".join(f"#{k} = :{k}" for k in data.keys())
-    expression_attribute_names = {f"#{k}": k for k in data.keys()}
-    expression_attribute_values = {f":{k}": v for k, v in data.items()}
-    response = table.update_item(
-        Key={'client_id': client_id},
-        UpdateExpression=update_expression,
-        ExpressionAttributeNames=expression_attribute_names,
-        ExpressionAttributeValues=expression_attribute_values,
-        ReturnValues="UPDATED_NEW"
-    )
-    if response.get("Attributes"):
-        return jsonify({"message": "Client updated successfully"}), 200
+    # Query the table for the product
+    response = product_table.get_item(Key={"name": product_name})
 
-    return jsonify({"error": "Client not found"}), 404
-
-@app.route('/delete-client/<client_id>', methods=['DELETE'])
-def delete_client(client_id: str) -> tuple[Response, int]:
-    '''Fetch the client by ID, delete client'''
-    response = table.delete_item(
-        Key={'client_id': client_id},
-        ReturnValues='ALL_OLD'
-    )
-    if 'Attributes' in response:
-        return jsonify({"message": "Client deleted successfully"}), 200
-    return jsonify({"error": "Client not found"}), 404
-
-@app.route('/search-clients', methods=['GET'])
-def search_clients() -> tuple[Response, int]:
-    '''Search item in DB by fetching parametres'''
-    name = request.args.get('name')
-    surname = request.args.get('surname')
-    product = request.args.get('product')
-
-    filter_expression = None
-    if name:
-        filter_expression = Attr('name').contains(name)
-    if surname:
-        filter_expression = (filter_expression & Attr('surname').contains(surname)) if filter_expression else Attr('surname').contains(surname)
-    if product:
-        filter_expression = (filter_expression & Attr('products').contains(product)) if filter_expression else Attr('products').contains(product)
-
-    if filter_expression:
-        response = table.scan(FilterExpression=filter_expression)
+    # If product exists, return it; otherwise, return an empty object
+    if "Item" in response:
+        return jsonify(response["Item"]), 200
     else:
-        response = table.scan()
+        return jsonify({}), 200
 
-    clients = response.get('Items', [])
-    return jsonify(clients), 200
+
+@app.route('/add-product', methods=['POST'])
+def add_product():
+    '''Add a new product or update an existing product'''
+    try:
+        data = request.json
+        product_name = data.get("product_name")
+        product_price = data.get("price")
+        product_amount = data.get("available_amount")
+
+        if not product_name or product_price is None or product_amount is None:
+            return jsonify({"error": "All fields (product_name, price, available_amount) are required"}), 400
+        
+        try:
+            product_price = int(product_price)
+            product_amount = int(product_amount)
+        except ValueError:
+            return jsonify({"error": "Price must be a number and Available Amount must be an integer"}), 400
+
+        # Check if the product exists using get_item (efficient Query)
+        response = product_table.get_item(Key={"product_name": product_name})
+        existing_product = response.get("Item")
+
+        if existing_product:
+            # Product exists, update amount and price
+            updated_amount = int(existing_product["available_amount"]) + product_amount
+            updated_price = product_price  # Overwrite with new price
+
+            product_table.update_item(
+                Key={"product_name": product_name},
+                UpdateExpression="SET available_amount = :a, price = :p",
+                ExpressionAttributeValues={
+                    ":a": updated_amount,
+                    ":p": updated_price
+                }
+            )
+            return jsonify({"message": "Product updated successfully"}), 200
+
+        # If product does not exist, insert a new one
+        new_product = {
+            "product_name": product_name,  # Since name is the partition key, we don't need an ID
+            "price": product_price,
+            "available_amount": product_amount
+        }
+
+        product_table.put_item(Item=new_product)
+
+        return jsonify({"message": "Product added successfully"}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/search-customers', methods=['GET'])
+def search_customers():
+    '''Search customers by email (query) or by name/surname (scan)'''
+    name = request.args.get("name", "").strip()
+    surname = request.args.get("surname", "").strip()
+    email = request.args.get("email", "").strip()
+
+    try:
+        customer = None
+
+        if email:  # If email is provided, use Query (efficient)
+            response = customer_table.get_item(Key={"email": email})
+            customer = response.get("Item")
+
+        elif name or surname:  # If name or surname is provided, use Scan (slower)
+            filter_expression = None
+            if name:
+                filter_expression = Attr("name").eq(name)
+            if surname:
+                if filter_expression:
+                    filter_expression &= Attr("surname").eq(surname)
+                else:
+                    filter_expression = Attr("surname").eq(surname)
+
+            if filter_expression:
+                response = customer_table.scan(FilterExpression=filter_expression)
+                customers = response.get("Items", [])
+                customer = customers[0] if customers else None  # Take the first match
+
+        if not customer:
+            return jsonify({"error": "Customer not found"}), 404
+
+        # Fetch customer's purchases using their email (since email is the partition key in the purchases table)
+        purchase_response = purchase_table.query(
+            KeyConditionExpression=Key("customer_email").eq(customer["email"])
+        )
+        purchases = purchase_response.get("Items", [])
+
+        # Combine customer and purchases data
+        customer["purchases"] = purchases
+
+        return jsonify(customer), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)

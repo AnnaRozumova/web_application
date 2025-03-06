@@ -123,59 +123,52 @@ def db_app() -> str:
     app.logger.info("Rendering database management page")
     return render_template('db_app.html')
 
-@app.route('/add-client', methods=['POST'])
-def add_client() -> Response:
-    '''Collect data from the form and send request to DataBase handler to add client'''
-    client_data = {
-        "name": request.form.get("name"),
-        "surname": request.form.get("surname"),
-        "email": request.form.get("email"),
-        "shipping_address": request.form.get("shipping_address"),
-        "products": request.form.getlist("products")
-    }
-    app.logger.info("Sending request to add new client: %s", client_data)
-    response = requests.post(f'{DB_APP_URL}/add-client', json=client_data, timeout=30)
-    if response.status_code == 201:
-        app.logger.info("Client added successfully: %s", client_data)
-        return jsonify({"success": True, "message": "Client added successfully!"})
+@app.route('/all-customers')
+def list_all_customers():
+    response = requests.get(f'{DB_APP_URL}/all-customers', timeout=30)
+    return jsonify(response.json()), response.status_code
+
+@app.route('/all-products')
+def list_all_products():
+    response = requests.get(f'{DB_APP_URL}/all-products', timeout=30)
+    return jsonify(response.json()), response.status_code
+
+@app.route('/all-purchases')
+def list_all_purchases():
+    response = requests.get(f'{DB_APP_URL}/all-purchases', timeout=30)
+    return jsonify(response.json()), response.status_code
+
+@app.route('/all-purchases-price')
+def total_price_all_purchases():
+    try:
+        response = requests.get(f'{DB_APP_URL}/all-purchases', timeout=30)
+        purchases = response.json()
+
+        total_price = round(sum(float(purchase["total_price"]) for purchase in purchases), 2)
+
+        return jsonify({"total_price": total_price}), 200
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
     
-    app.logger.warning("Failed to add client: %s", response.json())
-    return jsonify({"success": False, "message": "Failed to add client."})
 
-@app.route('/update-client/<client_id>', methods=['POST'])
-def update_client(client_id: str) -> tuple[Response, int]:
-    '''Send request to DataBase handler to update data'''
-    update_data = {
-        "name": request.form.get("name"),
-        "surname": request.form.get("surname"),
-        "email": request.form.get("email"),
-        "shipping_address": request.form.get("shipping_address"),
-        "products": request.form.getlist("products")
-    }
-    app.logger.info("Updating client ID %s with data: %s", client_id, update_data)
-    response = requests.put(f'{DB_APP_URL}/update-client/{client_id}', json=update_data, timeout=30)
-    app.logger.info("Client ID %s updated successfully", client_id)
-    return jsonify(response.json()), response.status_code
+@app.route('/add-product', methods=['POST'])
+def add_product():
+    try:
+        response = requests.post(f"{DB_APP_URL}/add-product", json=request.json, timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/delete-client/<client_id>', methods=['DELETE'])
-def delete_client(client_id: str) -> tuple[Response, int]:
-    '''Send request to delete client'''
-    app.logger.info("Attempting to delete client ID: %s", client_id)
-    response = requests.delete(f'{DB_APP_URL}/delete-client/{client_id}', timeout=30)
-    app.logger.info("Client ID %s deleted successfully", client_id)
-    return jsonify(response.json()), response.status_code
 
-@app.route('/search-clients', methods=['GET'])
-def search_clients() -> tuple[Response, int]:
-    '''Handle search request'''
-    params = {
-        "name": request.args.get("name"),
-        "surname": request.args.get("surname"),
-        "product": request.args.get("product")
-    }
-    app.logger.info("Searching clients with params: %s", params)
-    response = requests.get(f'{DB_APP_URL}/search-clients', params=params, timeout=30)
-    return jsonify(response.json()), response.status_code
+@app.route('/search-customers', methods=['GET'])
+def search_customers():
+    '''Route to forward customer search request to the backend'''
+    try:
+        # Forward the GET request with the user's search parameters to the DB service
+        response = requests.get(f"{DB_APP_URL}/search-customers", params=request.args, timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f"Database service unavailable: {str(e)}"}), 500
 
 
 

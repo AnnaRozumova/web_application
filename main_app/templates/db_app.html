@@ -1,13 +1,19 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<title>Client Database Management</title>
+		<title>E-shop Database Management</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
 		<link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
 		<noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/noscript.css') }}" /></noscript>
 	</head>
+	<script src="static/js/jquery.min.js"></script>
+	<script src="static/js/browser.min.js"></script>
+	<script src="static/js/breakpoints.min.js"></script>
+	<script src="static/js/util.js"></script>
+	<script src="static/js/main.js"></script>
+
 	<body class="is-preload">
 		<!-- Wrapper -->
 			<div id="wrapper">
@@ -20,119 +26,148 @@
 								<a href="{{ url_for('home') }}" class="logo">
 									<span class="symbol"><img src="{{ url_for('static', filename='images/logo.svg') }}" alt="" /></span><span class="title">Anna Rozumova</span><span class="subtitle">Python Developer</span>
 								</a>
-				<!-- Main -->
-					<div id="main">
-						<div class="inner">
-							<h1>Client Database Management</h1>
-								<div id="message" style="display: none;"></div>
-								<h2>Add Client</h2>
-								<form id="add-client-form" action="/add-client" method="POST">
-									<div class="row gtr-uniform">
-										<div class="col-6 col-12-xsmall">
-											<input type="text" name="name" placeholder="Name" required>
+								<h1>Coffee e-shop Database Manager</h1>
+								<span class="image main"><img src="{{ url_for('static', filename='images/coffee.jpg') }}" alt="coffee tree" /></span>
+								<p>I've created a simple Database with 3 tables in DynamoDB with random data. You can perform a few actions with my Database Manager. List available products, customers or purcheses, add product, or search customer.</p>
+								<section>
+									<div class="row">
+										<div class="col-4 col-12-medium">
+											<div class="styled-block">
+												<h2>Customers</h2>
+												<div class="col-12" id="customer-message" style="display: none;"></div>
+												<h4>Search Customers</h4>
+													<form id="search-customers-form" action="/search-customers" method="GET">
+														<div class="row gtr-uniform">
+															<div class="col-12">
+																<input type="text" name="name" placeholder="Search by Name">
+															</div>
+															<div class="col-12">
+																<input type="text" name="surname" placeholder="Search by Surname">
+															</div>
+															<div class="col-12">
+																<input type="email" name="email" placeholder="Search by Email">
+															</div>
+															<div class="col-12">
+																<div class="actions small">
+																	<button type="submit" class="button small">Search</button>
+																</div>
+															</div>
+														</div>
+													</form>
+								
+													<!-- Display Search Results -->
+													<div class="col-12" id="search-results">
+														<blockquote>
+															<!-- Search results will be displayed here via JavaScript -->
+														</blockquote> 
+													</div>
+
+													<div class="row">
+														<div class="col-6 col-12-medium">
+															<p>List of all customers</p>
+														</div>
+														<div class="col-6 col-12-medium">
+															<div class="actions small">
+																<button type="button" id="fetchCustomers" class="button small">Customers</button>
+															</div>
+														</div>
+														<div class="col-12" id="all-customers">
+															<blockquote id="customerList">
+																<!-- Search results will be displayed here via JavaScript -->
+															</blockquote> 
+														</div>
+													</div>
+											</div>
+
 										</div>
-										<div class="col-6 col-12-xsmall">
-											<input type="text" name="surname" placeholder="Surname" required>
+										<div class="col-4 col-12-medium">
+											<div class="styled-block">
+												<h2>Purchases</h2>
+												<div class="col-12" id="purchase-message" style="display: none;"></div>
+												<div class="row">
+													<div class="col-6 col-12-medium">
+														<p>Total price for all purchased products</p>
+													</div>
+													<div class="col-6 col-12-medium">
+														<div class="actions small">
+															<button type="button" id="fetchTotal" class="button small">Total</button>
+														</div>
+													</div>
+													<div class="col-12" id="all-purchases-price">
+														<blockquote id="totalPrice">
+															<!-- Search results will be displayed here via JavaScript -->
+														</blockquote> 
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="col-6 col-12-medium">
+														<p>List of all purchased products</p>
+													</div>
+													<div class="col-6 col-12-medium">
+														<div class="actions small">
+															<button type="button" id="fetchPurchases" class="button small">Purchases</button>
+														</div>
+													</div>
+													<div class="col-12" id="all-purchases">
+														<blockquote id="listPurchases">
+															<!-- Search results will be displayed here via JavaScript -->
+														</blockquote> 
+													</div>
+												</div>
+											</div>
 										</div>
-										<div class="col-6 col-12-xsmall">
-											<input type="email" name="email" placeholder="Email" required>
-										</div>
-										<div class="col-6 col-12-xsmall">
-											<input type="text" name="shipping_address" placeholder="Shipping Address" required>
-										</div>
-										<div class="col-6 col-12-xsmall">
-											<input type="text" name="products" placeholder="Products (comma separated)">
-										</div>
-										<div class="col-12">
-											<div class="actions">
-												<button type="submit" class="primary">Add Client</button>
+										<div class="col-4 col-12-medium">
+											<div class="styled-block">
+												<h2>Products</h2>
+												<div class="col-12" id="product-message" style="display: none;"></div>
+												
+												<h4>Add Product</h4>
+													<form id="add-product-form" action="/add-client" method="POST">
+														<div class="row gtr-uniform">
+															<div class="col-12">
+																<input type="text" name="product_name" placeholder="Product Name" required>
+															</div>
+															<div class="col-12">
+																<input type="text" name="price" placeholder="Price" required>
+															</div>
+															<div class="col-12">
+																<input type="text" name="available_amount" placeholder="Amount" required>
+															</div>
+														
+															<div class="col-12">
+																<div class="actions small">
+																	<button type="submit" class="button small">Add Product</button>
+																</div>
+															</div>
+														</div>
+													</form>
+
+													<div class="row">
+														<div class="col-6 col-12-medium">
+															<p>List of all availible products</p>
+														</div>
+														<div class="col-6 col-12-medium">
+															<div class="actions small">
+																<button type="button" id="fetchProducts" class="button small">Products</button>
+															</div>
+														</div>
+														<div class="col-12" id="all-products">
+															<blockquote id="listProducts">
+																<!-- Search results will be displayed here via JavaScript -->
+															</blockquote> 
+														</div>
+													</div>
 											</div>
 										</div>
 									</div>
-								</form>
-			
-								<h2>Search Clients</h2>
-								<form action="/search-clients" method="GET">
-									<div class="row gtr-uniform">
-										<div class="col-6 col-12-xsmall">
-											<input type="text" name="name" placeholder="Search by Name">
-										</div>
-										<div class="col-6 col-12-xsmall">
-											<input type="text" name="surname" placeholder="Search by Surname">
-										</div>
-										<div class="col-6 col-12-xsmall">
-											<input type="text" name="product" placeholder="Search by Product">
-										</div>
-										<div class="col-12">
-											<div class="actions">
-												<button type="submit" class="primary">Search</button>
-											</div>
-										</div>
-									</div>
-								</form>
-			
-								<!-- Display Search Results -->
-								<div id="search-results">
-									<blockquote>
-										<!-- Search results will be displayed here via JavaScript -->
-									</blockquote> 
-								</div>
-							</section>
-						</div>
-					</div>
-				</div>
-			
-				<script>
-					// JavaScript to handle search and display results
-					document.querySelector('form[action="/search-clients"]').onsubmit = async function(e) {
-						e.preventDefault();
-						const form = e.target;
-						const name = form.name.value;
-						const surname = form.surname.value;
-						const product = form.product.value;
-			
-						const response = await fetch(`/search-clients?name=${name}&surname=${surname}&product=${product}`);
-						const clients = await response.json();
-			
-						const resultsDiv = document.getElementById('search-results');
-						resultsDiv.innerHTML = clients.length ? `<h3>Results:</h3><ul>` + 
-							clients.map(client => `<li>${client.name} ${client.surname} - ${client.email}</li>`).join('') + 
-							`</ul>` : `<p>No results found</p>`;
-					};
-					document.getElementById('add-client-form').addEventListener('submit', async function (e) {
-						e.preventDefault(); 
-
-						const formData = new FormData(this); 
-
-						const response = await fetch('/add-client', {
-							method: 'POST',
-							body: formData,
-						});
-
-						const result = await response.json(); 
-
-						const messageDiv = document.getElementById('message');
-						messageDiv.style.display = 'block';
-						messageDiv.style.color = result.success ? 'green' : 'red';
-						messageDiv.textContent = result.message;
-
-						// Clear the form if the request was successful
-						if (result.success) {
-							this.reset();
-						}
-					});
-				</script>
+								</section>
+								<script src="static/js/db_app.js" defer></script>
+				
 						</div>
 					</div>
 
 			</div>
-
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
 
 	</body>
 </html>
