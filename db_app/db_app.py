@@ -124,13 +124,15 @@ def search_customers():
     email = request.args.get("email", "").strip()
 
     try:
-        customer = None
+        customers = []
 
-        if email:  # If email is provided, use Query (efficient)
+        if email:  
             response = customer_table.get_item(Key={"email": email})
             customer = response.get("Item")
+            if customer:
+                customers.append(customer)
 
-        elif name or surname:  # If name or surname is provided, use Scan (slower)
+        elif name or surname:
             filter_expression = None
             if name:
                 filter_expression = Attr("name").eq(name)
@@ -143,24 +145,51 @@ def search_customers():
             if filter_expression:
                 response = customer_table.scan(FilterExpression=filter_expression)
                 customers = response.get("Items", [])
-                customer = customers[0] if customers else None  # Take the first match
 
-        if not customer:
+        if not customers:
             return jsonify({"error": "Customer not found"}), 404
 
-        # Fetch customer's purchases using their email (since email is the partition key in the purchases table)
-        purchase_response = purchase_table.query(
-            KeyConditionExpression=Key("customer_email").eq(customer["email"])
-        )
-        purchases = purchase_response.get("Items", [])
+        for customer in customers:
+            purchase_response = purchase_table.query(
+                KeyConditionExpression=Key("customer_email").eq(customer["email"])
+            )
+            customer["purchases"] = purchase_response.get("Items", [])
 
-        # Combine customer and purchases data
-        customer["purchases"] = purchases
-
-        return jsonify(customer), 200
+        return jsonify({"customers": customers}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/add-customer', methods=['POST'])
+def add_customer():
+    '''Add a new customer if they do not already exist'''
+    try:
+        data = request.json
+        name = data.get("name", "").strip()
+        surname = data.get("surname", "").strip()
+        email = data.get("email", "").strip()
+
+        if not name or not surname or not email:
+            return jsonify({"error": "Missing required fields: name, surname, or email"}), 400
+
+        existing_customer = customer_table.get_item(Key={"email": email}).get("Item")
+        if existing_customer:
+            return jsonify({"error": "Customer already exists"}), 400
+
+        new_customer = {
+            "name": name,
+            "surname": surname,
+            "email": email
+        }
+
+        customer_table.put_item(Item=new_customer)
+
+        return jsonify({"success": True, "customer": new_customer}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == '__main__':

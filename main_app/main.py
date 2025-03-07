@@ -169,6 +169,15 @@ def search_customers():
         return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({'error': f"Database service unavailable: {str(e)}"}), 500
+    
+
+@app.route('/add-customer', methods=['POST'])
+def add_customer():
+    try:
+        response = requests.post(f"{DB_APP_URL}/add-customer", json=request.json, timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
 
 
 

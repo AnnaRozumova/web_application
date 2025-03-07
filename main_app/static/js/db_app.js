@@ -121,56 +121,106 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     });
 
-    // Handle search customers form submission
-    document.getElementById("search-customers-form").addEventListener("submit", function(event) {
-        event.preventDefault(); 
-
-        let name = document.querySelector("input[name='name']").value.trim();
-        let surname = document.querySelector("input[name='surname']").value.trim();
-        let email = document.querySelector("input[name='email']").value.trim();
-        let resultsDiv = document.querySelector("#search-results blockquote");
-
-        // Debugging
-        console.log("Searching for:", { name, surname, email });
-
-        resultsDiv.innerHTML = "<p>Searching...</p>";
-
-        let searchParams = new URLSearchParams();
-        if (name) searchParams.append("name", name);
-        if (surname) searchParams.append("surname", surname);
-        if (email) searchParams.append("email", email);
-
-        fetch(`/search-customers?${searchParams.toString()}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log("Search response:", data);
-
-                resultsDiv.innerHTML = "";
-
-                if (data.error) {
-                    resultsDiv.innerHTML = `<p style="color: red;">${data.error}</p>`;
-                } else {
-                    let customerInfo = `<p><strong>Name:</strong> ${data.name} ${data.surname}<br>
-                                        <strong>Email:</strong> ${data.email}</p>`;
-
-                    if (data.purchases && data.purchases.length > 0) {
-                        customerInfo += "<h4>Purchases:</h4><ul>";
-                        data.purchases.forEach(purchase => {
-                            customerInfo += `<li><strong>Purchase ID:</strong> ${purchase.purchase_id} 
-                                             <br><strong>Total Price:</strong> $${purchase.total_price}</li>`;
-                        });
-                        customerInfo += "</ul>";
-                    } else {
-                        customerInfo += "<p>No purchases found for this customer.</p>";
-                    }
-
-                    resultsDiv.innerHTML = customerInfo;
-                }
-            })
-            .catch(error => {
-                console.error("Error searching customer:", error);
-                resultsDiv.innerHTML = `<p style="color: red;">Error retrieving customer data.</p>`;
-            });
+    
+    document.getElementById("search-btn").addEventListener("click", function (event) {
+        event.preventDefault();
+        searchCustomer(false); // Search only
     });
 
+    document.getElementById("add-btn").addEventListener("click", function (event) {
+        event.preventDefault();
+        searchCustomer(true); // Search and add if not found
+    });
 });
+
+function searchCustomer(addIfNotFound) {
+    let name = document.querySelector("input[name='name']").value.trim();
+    let surname = document.querySelector("input[name='surname']").value.trim();
+    let email = document.querySelector("input[name='email']").value.trim();
+    let resultsDiv = document.querySelector("#search-results blockquote");
+
+    resultsDiv.innerHTML = "<p>Searching...</p>";
+
+    let searchParams = new URLSearchParams();
+    if (name) searchParams.append("name", name);
+    if (surname) searchParams.append("surname", surname);
+    if (email) searchParams.append("email", email);
+
+    fetch(`/search-customers?${searchParams.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            resultsDiv.innerHTML = "";
+            console.log("Search response:", data);
+
+            if (data.error) {
+                resultsDiv.innerHTML = `<p style="color: red;">${data.error}</p>`;
+                if (addIfNotFound) {
+                    validateAndAddCustomer(name, surname, email, resultsDiv);
+                }
+            } else {
+                displayCustomers(data.customers, resultsDiv);
+            }
+        })
+        .catch(error => {
+            console.error("Error searching customer:", error);
+            resultsDiv.innerHTML = `<p style="color: red;">Error retrieving customer data.</p>`;
+        });
+}
+
+function validateAndAddCustomer(name, surname, email, resultsDiv) {
+    if (!name || !surname || !email) {
+        resultsDiv.innerHTML = `<p style="color: red;">Please enter Name, Surname, and Email to add a new customer.</p>`;
+        return;
+    }
+
+    addCustomer(name, surname, email, resultsDiv);
+}
+
+function addCustomer(name, surname, email, resultsDiv) {
+    fetch('/add-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, surname, email })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resultsDiv.innerHTML = `<p style="color: green;">Customer added successfully.</p>`;
+            } else {
+                resultsDiv.innerHTML = `<p style="color: red;">${data.error || "Failed to add customer."}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error("Error adding customer:", error);
+            resultsDiv.innerHTML = `<p style="color: red;">Error adding customer.</p>`;
+        });
+}
+
+function displayCustomers(customers, resultsDiv) {
+    if (!Array.isArray(customers) || customers.length === 0) {
+        resultsDiv.innerHTML = `<p style="color: red;">No customers found.</p>`;
+        return;
+    }
+
+    resultsDiv.innerHTML = "<h4>Matching Customers:</h4>";
+
+    customers.forEach(customer => {
+        let customerInfo = `<p><strong>Name:</strong> ${customer.name} ${customer.surname}<br>
+                            <strong>Email:</strong> ${customer.email}</p>`;
+
+        if (customer.purchases && customer.purchases.length > 0) {
+            customerInfo += "<h4>Purchases:</h4><ul>";
+            customer.purchases.forEach(purchase => {
+                customerInfo += `<li><strong>Purchase ID:</strong> ${purchase.purchase_id} 
+                                 <br><strong>Total Price:</strong> $${purchase.total_price}</li>`;
+            });
+            customerInfo += "</ul>";
+        } else {
+            customerInfo += "<p>No purchases found for this customer.</p>";
+        }
+
+        resultsDiv.innerHTML += `<div class="customer-card">${customerInfo}</div>`;
+    });
+}
+
+
