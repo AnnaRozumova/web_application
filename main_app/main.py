@@ -151,11 +151,23 @@ def total_price_all_purchases():
         return jsonify({'error': str(e)}), 500
     
 
-@app.route('/add-product', methods=['POST'])
+@app.route('/add-product', methods=['GET', 'POST'])
 def add_product():
+    '''Handles adding a product (POST) and retrieving product details (GET)'''
     try:
-        response = requests.post(f"{DB_APP_URL}/add-product", json=request.json, timeout=30)
-        return jsonify(response.json()), response.status_code
+        if request.method == "GET":
+            # Forward GET request to the backend to check if the product exists
+            product_name = request.args.get("product_name")
+            if not product_name:
+                return jsonify({"error": "Product name is required"}), 400
+
+            response = requests.get(f"{DB_APP_URL}/add-product", params={"product_name": product_name}, timeout=30)
+            return jsonify(response.json()), response.status_code
+
+        elif request.method == "POST":
+            # Forward POST request to the backend to add/update product
+            response = requests.post(f"{DB_APP_URL}/add-product", json=request.json, timeout=30)
+            return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 500
 
@@ -179,6 +191,13 @@ def add_customer():
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/make-purchase', methods=['POST'])
+def make_purchase():
+    try:
+        response = requests.post(f"{DB_APP_URL}/make-purchase", json=request.json, timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == "__main__":

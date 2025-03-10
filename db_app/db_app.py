@@ -64,53 +64,67 @@ def get_product():
         return jsonify({}), 200
 
 
-@app.route('/add-product', methods=['POST'])
+@app.route('/add-product', methods=['GET', 'POST'])
 def add_product():
     '''Add a new product or update an existing product'''
     try:
-        data = request.json
-        product_name = data.get("product_name")
-        product_price = data.get("price")
-        product_amount = data.get("available_amount")
+        if request.method == "GET":
+            product_name = request.args.get("product_name")
+            if not product_name:
+                return jsonify({"error": "Product name is required"}), 400
 
-        if not product_name or product_price is None or product_amount is None:
-            return jsonify({"error": "All fields (product_name, price, available_amount) are required"}), 400
-        
-        try:
-            product_price = int(product_price)
-            product_amount = int(product_amount)
-        except ValueError:
-            return jsonify({"error": "Price must be a number and Available Amount must be an integer"}), 400
+            response = product_table.get_item(Key={"product_name": product_name})
+            existing_product = response.get("Item")
 
-        # Check if the product exists using get_item (efficient Query)
-        response = product_table.get_item(Key={"product_name": product_name})
-        existing_product = response.get("Item")
+            if existing_product:
+                return jsonify(existing_product), 200
+            else:
+                return jsonify({"message": "Product not found"}), 404
 
-        if existing_product:
-            # Product exists, update amount and price
-            updated_amount = int(existing_product["available_amount"]) + product_amount
-            updated_price = product_price  # Overwrite with new price
+        elif request.method == "POST":
+            data = request.json
+            product_name = data.get("product_name")
+            product_price = data.get("price")
+            product_amount = data.get("available_amount")
 
-            product_table.update_item(
-                Key={"product_name": product_name},
-                UpdateExpression="SET available_amount = :a, price = :p",
-                ExpressionAttributeValues={
-                    ":a": updated_amount,
-                    ":p": updated_price
-                }
-            )
-            return jsonify({"message": "Product updated successfully"}), 200
+            if not product_name or product_price is None or product_amount is None:
+                return jsonify({"error": "All fields (product_name, price, available_amount) are required"}), 400
+            
+            try:
+                product_price = int(product_price)
+                product_amount = int(product_amount)
+            except ValueError:
+                return jsonify({"error": "Price must be a number and Available Amount must be an integer"}), 400
 
-        # If product does not exist, insert a new one
-        new_product = {
-            "product_name": product_name,  # Since name is the partition key, we don't need an ID
-            "price": product_price,
-            "available_amount": product_amount
-        }
+            # Check if the product exists using get_item (efficient Query)
+            response = product_table.get_item(Key={"product_name": product_name})
+            existing_product = response.get("Item")
 
-        product_table.put_item(Item=new_product)
+            if existing_product:
+                # Product exists, update amount and price
+                updated_amount = int(existing_product["available_amount"]) + product_amount
+                updated_price = product_price  # Overwrite with new price
 
-        return jsonify({"message": "Product added successfully"}), 201
+                product_table.update_item(
+                    Key={"product_name": product_name},
+                    UpdateExpression="SET available_amount = :a, price = :p",
+                    ExpressionAttributeValues={
+                        ":a": updated_amount,
+                        ":p": updated_price
+                    }
+                )
+                return jsonify({"message": "Product updated successfully"}), 200
+
+            # If product does not exist, insert a new one
+            new_product = {
+                "product_name": product_name,  # Since name is the partition key, we don't need an ID
+                "price": product_price,
+                "available_amount": product_amount
+            }
+
+            product_table.put_item(Item=new_product)
+
+            return jsonify({"message": "Product added successfully"}), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -190,6 +204,68 @@ def add_customer():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/make-purchase', methods=['POST'])
+def make_purchase():
+    '''Check if customer exist and product amount is available. Add a new purchase.'''
+    try:
+        data = request.json
+        customer_email = data.get("customer_email")
+        product_name = data.get("product_name")
+        amount_to_purchase = data.get("amount_to_purchase")
+
+        if not customer_email or product_name is None or amount_to_purchase is None:
+            return jsonify({"error": "All fields (email, product_name, amount) are required"}), 400
+        
+        try:
+            amount_to_purchase = int(amount_to_purchase)
+        except ValueError:
+            return jsonify({"error": "Amount must be an integer"}), 400
+
+        # Check if the product exists using get_item (efficient Query)
+        response_customer = customer_table.get_item(Key={"email": customer_email})
+        customer = response_customer.get("Item")
+
+        if not customer:
+            return jsonify({"error": "Customer not found"}), 404
+
+        response = product_table.get_item(Key={"product_name": product_name})
+        product_in_stock = response.get("Item")
+
+        if not product_in_stock:
+            return jsonify({"error": "Product not found"}), 404
+
+        available_amount = int(product_in_stock["available_amount"])
+
+        if available_amount < amount_to_purchase:
+            return jsonify({"error": f"The maximum amount you can purchase is {available_amount}"}), 400
+
+            
+        price = int(product_in_stock["price"])
+        purchase_id = str(uuid.uuid4())
+        products = [{"product_name": product_name, "amount": amount_to_purchase}]
+        total = round((price*amount_to_purchase), 2)
+        new_purchase = {
+            "purchase_id": purchase_id,
+            "customer_email": customer_email,
+            "products": products,
+            "total_price": total
+        }
+
+        purchase_table.put_item(Item=new_purchase)
+
+        product_table.update_item(
+            Key={"product_name": product_name},
+        UpdateExpression="SET available_amount = :a",
+        ExpressionAttributeValues={
+            ":a": (available_amount - amount_to_purchase)
+            }
+        )
+
+        return jsonify({"message": f"You successfully purchased {amount_to_purchase} pieces of {product_name} for a total price of {total}"}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

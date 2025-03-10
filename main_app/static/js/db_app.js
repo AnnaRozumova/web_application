@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", function() {
     let buttons = document.querySelectorAll("button");
     buttons.forEach(button => {
         button.addEventListener("click", function(event) {
-            if (event.target.id !== "searchCustomersButton") {  // Skip clearing on search button
-                clearAllResults();
+            if (event.target.type === "submit" || event.target.id === "searchCustomersButton") {
+                return;
             }
         });
     });

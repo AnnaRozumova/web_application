@@ -73,14 +73,14 @@ def create_fake_purchase(customers, products):
         total_price += item_total
 
         product_items.append({
-            'product_name': product['product_name'],  # Correct key name
+            'product_name': product['product_name'],  
             'amount': amount
         })
 
     return {
         'purchase_id': fake.uuid4(),
         'customer_email': customer['email'],
-        'products': product_items,  # Now stores a list of dictionaries
+        'products': product_items, 
         'total_price': total_price
     }
 

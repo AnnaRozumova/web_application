@@ -84,47 +84,75 @@
 										<div class="col-4 col-12-medium">
 											<div class="styled-block">
 												<h2>Purchases</h2>
-												<div class="col-12" id="purchase-message" style="display: none;"></div>
-												<div class="row">
-													<div class="col-6 col-12-medium">
-														<p>Total price for all purchased products</p>
-													</div>
-													<div class="col-6 col-12-medium">
-														<div class="actions small">
-															<button type="button" id="fetchTotal" class="button small">Total</button>
+													<div class="col-12" id="purchase-message" style="display: none;"></div>
+													<div class="row">
+														<div class="col-6 col-12-medium">
+															<p>Total price for all purchased products</p>
+														</div>
+														<div class="col-6 col-12-medium">
+															<div class="actions small">
+																<button type="button" id="fetchTotal" class="button small">Total</button>
+															</div>
+														</div>
+														<div class="col-12" id="all-purchases-price">
+															<blockquote id="totalPrice">
+																<!-- Search results will be displayed here via JavaScript -->
+															</blockquote> 
 														</div>
 													</div>
-													<div class="col-12" id="all-purchases-price">
-														<blockquote id="totalPrice">
-															<!-- Search results will be displayed here via JavaScript -->
-														</blockquote> 
-													</div>
-												</div>
 
-												<div class="row">
-													<div class="col-6 col-12-medium">
-														<p>List of all purchased products</p>
-													</div>
-													<div class="col-6 col-12-medium">
-														<div class="actions small">
-															<button type="button" id="fetchPurchases" class="button small">Purchases</button>
+													<h4>Make a purchase</h4>
+														<form id="make-purchase-form" action="/make-purchase" method="POST">
+															<div class="row gtr-uniform">
+																<div class="col-12">
+																	<input type="email" name="customer_email" placeholder="Email of customer">
+																</div>
+																<div class="col-12">
+																	<input type="text" name="product_name" placeholder="Name of product">
+																</div>
+																<div class="col-12">
+																	<input type="text" name="amount_to_purchase" placeholder="Amount">
+																</div>
+																<div class="col-12">
+																	<div class="actions small">
+																		<button type="submit" class="button small">Purchase</button>
+																	</div>
+																</div>
+															</div>
+														</form>
+									
+														<!-- Display Purchase Results -->
+														<div class="col-12" id="purchase-results">
+															<blockquote>
+																<!-- Purchase results will be displayed here via JavaScript -->
+															</blockquote> 
+														</div>
+
+													<div class="row">
+														<div class="col-6 col-12-medium">
+															<p>List of all purchases</p>
+														</div>
+														<div class="col-6 col-12-medium">
+															<div class="actions small">
+																<button type="button" id="fetchPurchases" class="button small">Purchases</button>
+															</div>
+														</div>
+														<div class="col-12" id="all-purchases">
+															<blockquote id="listPurchases">
+																<!-- Search results will be displayed here via JavaScript -->
+															</blockquote> 
 														</div>
 													</div>
-													<div class="col-12" id="all-purchases">
-														<blockquote id="listPurchases">
-															<!-- Search results will be displayed here via JavaScript -->
-														</blockquote> 
-													</div>
-												</div>
 											</div>
 										</div>
+
 										<div class="col-4 col-12-medium">
 											<div class="styled-block">
 												<h2>Products</h2>
 												<div class="col-12" id="product-message" style="display: none;"></div>
 												
 												<h4>Add Product</h4>
-													<form id="add-product-form" action="/add-client" method="POST">
+													<form id="add-product-form" action="/add-product" method="POST">
 														<div class="row gtr-uniform">
 															<div class="col-12">
 																<input type="text" name="product_name" placeholder="Product Name" required>
@@ -164,7 +192,8 @@
 									</div>
 								</section>
 								<script src="static/js/db_app.js" defer></script>
-				
+								<script src="static/js/add_forms.js" defer></script>
+
 						</div>
 					</div>
 
