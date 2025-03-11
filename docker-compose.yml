@@ -44,6 +44,8 @@ services:
     container_name: wiki_app
     networks:
       - app-network
+    env_file:
+      - .env
     ports:
       - "8000:8000"
 

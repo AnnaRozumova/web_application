@@ -124,22 +124,26 @@ def db_app() -> str:
     return render_template('db_app.html')
 
 @app.route('/all-customers')
-def list_all_customers():
+def list_all_customers() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
     response = requests.get(f'{DB_APP_URL}/all-customers', timeout=30)
     return jsonify(response.json()), response.status_code
 
 @app.route('/all-products')
-def list_all_products():
+def list_all_products() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
     response = requests.get(f'{DB_APP_URL}/all-products', timeout=30)
     return jsonify(response.json()), response.status_code
 
 @app.route('/all-purchases')
-def list_all_purchases():
+def list_all_purchases() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
     response = requests.get(f'{DB_APP_URL}/all-purchases', timeout=30)
     return jsonify(response.json()), response.status_code
 
 @app.route('/all-purchases-price')
-def total_price_all_purchases():
+def total_price_all_purchases() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
     try:
         response = requests.get(f'{DB_APP_URL}/all-purchases', timeout=30)
         purchases = response.json()
@@ -149,10 +153,9 @@ def total_price_all_purchases():
         return jsonify({"total_price": total_price}), 200
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 500
-    
 
 @app.route('/add-product', methods=['GET', 'POST'])
-def add_product():
+def add_product() -> tuple[Response, int]:
     '''Handles adding a product (POST) and retrieving product details (GET)'''
     try:
         if request.method == "GET":
@@ -164,16 +167,15 @@ def add_product():
             response = requests.get(f"{DB_APP_URL}/add-product", params={"product_name": product_name}, timeout=30)
             return jsonify(response.json()), response.status_code
 
-        elif request.method == "POST":
+        if request.method == "POST":
             # Forward POST request to the backend to add/update product
             response = requests.post(f"{DB_APP_URL}/add-product", json=request.json, timeout=30)
             return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/search-customers', methods=['GET'])
-def search_customers():
+def search_customers() -> tuple[Response, int]:
     '''Route to forward customer search request to the backend'''
     try:
         # Forward the GET request with the user's search parameters to the DB service
@@ -181,10 +183,10 @@ def search_customers():
         return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({'error': f"Database service unavailable: {str(e)}"}), 500
-    
 
 @app.route('/add-customer', methods=['POST'])
-def add_customer():
+def add_customer() -> tuple[Response, int]:
+    '''Handling add customer function'''
     try:
         response = requests.post(f"{DB_APP_URL}/add-customer", json=request.json, timeout=30)
         return jsonify(response.json()), response.status_code
@@ -192,7 +194,8 @@ def add_customer():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/make-purchase', methods=['POST'])
-def make_purchase():
+def make_purchase() -> tuple[Response, int]:
+    '''Route to connect make purchase function'''
     try:
         response = requests.post(f"{DB_APP_URL}/make-purchase", json=request.json, timeout=30)
         return jsonify(response.json()), response.status_code
