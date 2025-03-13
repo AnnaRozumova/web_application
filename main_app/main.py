@@ -171,6 +171,9 @@ def add_product() -> tuple[Response, int]:
             # Forward POST request to the backend to add/update product
             response = requests.post(f"{DB_APP_URL}/add-product", json=request.json, timeout=30)
             return jsonify(response.json()), response.status_code
+
+        return jsonify({'error': "Unsupported method"}), 405
+
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 500
 

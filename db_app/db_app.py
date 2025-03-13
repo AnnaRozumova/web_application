@@ -49,21 +49,6 @@ def list_all_purchases() -> tuple[Response, int]:
     return jsonify(purchases), 200
 
 
-@app.route('/get-product', methods=['GET'])
-def get_product() -> tuple[Response, int]:
-    '''Check if a product exists in the database using Query instead of Scan'''
-    product_name = request.args.get("name")
-    if not product_name:
-        app.logger.warning("Product name is missing in GET request")
-        return jsonify({"error": "Product name is required"}), 400
-
-    response = product_table.get_item(Key={"name": product_name})
-
-    if "Item" in response:
-        return jsonify(response["Item"]), 200
-    return jsonify({}), 200
-
-
 @app.route('/add-product', methods=['GET', 'POST'])
 def add_product() -> tuple[Response, int]:
     '''Add a new product or update an existing product'''
