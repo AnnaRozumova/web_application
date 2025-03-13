@@ -9,9 +9,29 @@ def mock_dynamodb_setup():
         dynamodb = boto3.resource("dynamodb", region_name="eu-central-1")
 
         dynamodb.create_table(
-            TableName='clients',
-            KeySchema=[{'AttributeName': 'client_id', 'KeyType': 'HASH'}],
-            AttributeDefinitions=[{'AttributeName': 'client_id', 'AttributeType': 'S'}],
+            TableName='customers',
+            KeySchema=[{'AttributeName': 'email', 'KeyType': 'HASH'}],
+            AttributeDefinitions=[{'AttributeName': 'email', 'AttributeType': 'S'}],
+            BillingMode='PAY_PER_REQUEST'
+        )
+
+        dynamodb.create_table(
+            TableName='products',
+            KeySchema=[{'AttributeName': 'product_name', 'KeyType': 'HASH'}],
+            AttributeDefinitions=[{'AttributeName': 'product_name', 'AttributeType': 'S'}],
+            BillingMode='PAY_PER_REQUEST'
+        )
+
+        dynamodb.create_table(
+            TableName='purchases',
+            KeySchema=[
+                {'AttributeName': 'customer_email', 'KeyType': 'HASH'},
+                {'AttributeName': 'purchase_id', 'KeyType': 'RANGE'}
+            ],
+            AttributeDefinitions=[
+                {'AttributeName': 'customer_email', 'AttributeType': 'S'},
+                {'AttributeName': 'purchase_id', 'AttributeType': 'S'}
+            ],
             BillingMode='PAY_PER_REQUEST'
         )
 
@@ -19,7 +39,7 @@ def mock_dynamodb_setup():
 
 @pytest.fixture
 def test_client(mock_dynamodb_setup):
-    '''Test updating a client in database.'''
+    '''Create a test client for Flask application.'''
     import db_app
     db_app.app.config.update({
         "TESTING": True,

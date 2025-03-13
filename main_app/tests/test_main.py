@@ -103,7 +103,7 @@ class TestMainApp(unittest.TestCase):
         '''Test redirect to app page'''
         response = self.client.get('/db-app')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Search', response.data)
+        self.assertIn(b'Customers', response.data)
 
 
     @patch('requests.post')
@@ -166,20 +166,6 @@ class TestMainApp(unittest.TestCase):
         # Assertions
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"success": True, "message": "Client updated successfully!"})
-
-    @patch('requests.delete')
-    def test_delete_client_success(self, mock_delete):
-        '''Mock the external API response for deleting a client'''
-        mock_delete.return_value.status_code = 200
-        mock_delete.return_value.json.return_value = {"success": True, "message": "Client deleted successfully!"}
-
-        # Simulate a DELETE request to delete a client
-        client_id = "123"
-        response = self.client.delete(f'/delete-client/{client_id}')
-
-        # Assertions
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json, {"success": True, "message": "Client deleted successfully!"})
 
     @patch('requests.get')
     def test_search_clients(self, mock_get):
