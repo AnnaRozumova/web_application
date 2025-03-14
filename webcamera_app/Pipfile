@@ -11,6 +11,8 @@ pymongo = "*"
 boto3 = "*"
 python-dotenv = "*"
 flask-cors = "*"
+pytest = "*"
+moto = "*"
 
 [dev-packages]
 

@@ -8,6 +8,9 @@ lint-all:
 	pipenv run pylint $(shell find . -name "*.py")
 	pipenv run mypy $(shell find . -name "*.py")
 
+test:
+	python -m pytest
+
 install-env:
 	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 
