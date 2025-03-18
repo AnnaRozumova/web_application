@@ -13,6 +13,7 @@ python-dotenv = "*"
 flask-mail = "*"
 flask-cors = "*"
 mypy = "*"
+pytest = "*"
 
 [dev-packages]
 
