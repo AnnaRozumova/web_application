@@ -98,23 +98,26 @@ def download(filename: str) -> Response:
 @app.route('/wiki-app', methods=['GET', 'POST'])
 def wiki_app() -> str:
     '''Handle request to wikipedia from user'''
-    if request.method == 'POST':
-        query = request.form['query']
-        app.logger.info("Searching Wikipedia for query: %s", query)
-        response = requests.post(f"{WIKI_APP_URL}/query", json={'query': query}, timeout=30)
+    try:
+        if request.method == 'POST':
+            query = request.form['query']
+            app.logger.info("Searching Wikipedia for query: %s", query)
+            response = requests.post(f"{WIKI_APP_URL}/query", json={'query': query}, timeout=30)
 
-        if response.status_code == 200:
-            data = response.json()
-            app.logger.info("Wikipedia search successful for query: %s", query)
-            return render_template('wiki_app.html', title=data['title'], summary=data['summary'], url=data['url'], main_image=data['main_image'])
-        if response.status_code == 404:
-            error_message = response.json().get('error', 'Article nor found.')
-            app.logger.warning("Wikipedia article not found: %s", query)
-            return render_template('wiki_app.html', error=error_message)
+            if response.status_code == 200:
+                data = response.json()
+                app.logger.info("Wikipedia search successful for query: %s", query)
+                return render_template('wiki_app.html', title=data['title'], summary=data['summary'], url=data['url'], main_image=data['main_image'])
+            if response.status_code == 404:
+                error_message = response.json().get('error', 'Article nor found.')
+                app.logger.warning("Wikipedia article not found: %s", query)
+                return render_template('wiki_app.html', error=error_message)
 
-        app.logger.error("Wikipedia service error for query: %s", query)
-        return render_template('wiki_app.html', error="An error occured while fetching data.")
-
+            app.logger.error("Wikipedia service error for query: %s", query)
+            return render_template('wiki_app.html', error="An error occured while fetching data.")
+    except requests.exceptions.RequestException as e:
+        app.logger.error("Wikipedia service unavailable: %s", str(e), exc_info=True)
+        return render_template('wiki_app.html', error="Wikipedia service is currently unavailable.")
     return render_template('wiki_app.html')
 
 @app.route('/db-app')
@@ -123,60 +126,100 @@ def db_app() -> str:
     app.logger.info("Rendering database management page")
     return render_template('db_app.html')
 
-@app.route('/add-client', methods=['POST'])
-def add_client() -> Response:
-    '''Collect data from the form and send request to DataBase handler to add client'''
-    client_data = {
-        "name": request.form.get("name"),
-        "surname": request.form.get("surname"),
-        "email": request.form.get("email"),
-        "shipping_address": request.form.get("shipping_address"),
-        "products": request.form.getlist("products")
-    }
-    app.logger.info("Sending request to add new client: %s", client_data)
-    response = requests.post(f'{DB_APP_URL}/add-client', json=client_data, timeout=30)
-    if response.status_code == 201:
-        app.logger.info("Client added successfully: %s", client_data)
-        return jsonify({"success": True, "message": "Client added successfully!"})
-    
-    app.logger.warning("Failed to add client: %s", response.json())
-    return jsonify({"success": False, "message": "Failed to add client."})
+@app.route('/all-customers')
+def list_all_customers() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
+    try:
+        response = requests.get(f'{DB_APP_URL}/all-customers', timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        app.logger.error("Database service unavailable: %s", str(e), exc_info=True)
+        return jsonify({'error': 'Database service unavailable'}), 500
 
-@app.route('/update-client/<client_id>', methods=['POST'])
-def update_client(client_id: str) -> tuple[Response, int]:
-    '''Send request to DataBase handler to update data'''
-    update_data = {
-        "name": request.form.get("name"),
-        "surname": request.form.get("surname"),
-        "email": request.form.get("email"),
-        "shipping_address": request.form.get("shipping_address"),
-        "products": request.form.getlist("products")
-    }
-    app.logger.info("Updating client ID %s with data: %s", client_id, update_data)
-    response = requests.put(f'{DB_APP_URL}/update-client/{client_id}', json=update_data, timeout=30)
-    app.logger.info("Client ID %s updated successfully", client_id)
-    return jsonify(response.json()), response.status_code
+@app.route('/all-products')
+def list_all_products() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
+    try:
+        response = requests.get(f'{DB_APP_URL}/all-products', timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        app.logger.error("Database service unavailable: %s", str(e), exc_info=True)
+        return jsonify({'error': 'Database service unavailable'}), 500
 
-@app.route('/delete-client/<client_id>', methods=['DELETE'])
-def delete_client(client_id: str) -> tuple[Response, int]:
-    '''Send request to delete client'''
-    app.logger.info("Attempting to delete client ID: %s", client_id)
-    response = requests.delete(f'{DB_APP_URL}/delete-client/{client_id}', timeout=30)
-    app.logger.info("Client ID %s deleted successfully", client_id)
-    return jsonify(response.json()), response.status_code
+@app.route('/all-purchases')
+def list_all_purchases() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
+    try:
+        response = requests.get(f'{DB_APP_URL}/all-purchases', timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        app.logger.error("Database service unavailable: %s", str(e), exc_info=True)
+        return jsonify({'error': 'Database service unavailable'}), 500
 
-@app.route('/search-clients', methods=['GET'])
-def search_clients() -> tuple[Response, int]:
-    '''Handle search request'''
-    params = {
-        "name": request.args.get("name"),
-        "surname": request.args.get("surname"),
-        "product": request.args.get("product")
-    }
-    app.logger.info("Searching clients with params: %s", params)
-    response = requests.get(f'{DB_APP_URL}/search-clients', params=params, timeout=30)
-    return jsonify(response.json()), response.status_code
+@app.route('/all-purchases-price')
+def total_price_all_purchases() -> tuple[Response, int]:
+    '''Route to connect frontend button with backend function'''
+    try:
+        response = requests.get(f'{DB_APP_URL}/all-purchases', timeout=30)
+        purchases = response.json()
 
+        total_price = round(sum(float(purchase["total_price"]) for purchase in purchases), 2)
+
+        return jsonify({"total_price": total_price}), 200
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/add-product', methods=['GET', 'POST'])
+def add_product() -> tuple[Response, int]:
+    '''Handles adding a product (POST) and retrieving product details (GET)'''
+    try:
+        if request.method == "GET":
+            product_name = request.args.get("product_name")
+            if not product_name:
+                return jsonify({"error": "Product name is required"}), 400
+
+            response = requests.get(f"{DB_APP_URL}/add-product", params={"product_name": product_name}, timeout=30)
+            return jsonify(response.json()), response.status_code
+
+        if request.method == "POST":
+            response = requests.post(f"{DB_APP_URL}/add-product", json=request.json, timeout=30)
+            return jsonify(response.json()), response.status_code
+
+        return jsonify({'error': "Unsupported method"}), 405
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/search-customers', methods=['GET'])
+def search_customers() -> tuple[Response, int]:
+    '''Route to forward customer search request to the backend'''
+    try:
+        response = requests.get(f"{DB_APP_URL}/search-customers", params=request.args, timeout=30)
+        data = response.json()
+
+        if not isinstance(data, list):
+            return jsonify([]), 200
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f"Database service unavailable: {str(e)}"}), 500
+
+@app.route('/add-customer', methods=['POST'])
+def add_customer() -> tuple[Response, int]:
+    '''Handling add customer function'''
+    try:
+        response = requests.post(f"{DB_APP_URL}/add-customer", json=request.json, timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/make-purchase', methods=['POST'])
+def make_purchase() -> tuple[Response, int]:
+    '''Route to connect make purchase function'''
+    try:
+        response = requests.post(f"{DB_APP_URL}/make-purchase", json=request.json, timeout=30)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == "__main__":

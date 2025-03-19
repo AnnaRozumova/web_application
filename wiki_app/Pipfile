@@ -9,6 +9,9 @@ flask = "*"
 requests = "*"
 beautifulsoup4 = "*"
 mypy = "*"
+types-requests = "*"
+pytest = "*"
+flask-cors = "*"
 
 [dev-packages]
 

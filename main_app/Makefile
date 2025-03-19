@@ -8,6 +8,9 @@ lint-all:
 	pipenv run pylint main.py
 	pipenv run mypy main.py
 
+test:
+	pipenv run pytest tests/
+
 install-env:
 	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
 

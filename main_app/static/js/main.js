@@ -6,8 +6,8 @@
 
 (function($) {
 
-	var	$window = $(window),
-		$body = $('body');
+	var	$window = $(window);
+	var	$body = $('body');
 
 	// Breakpoints.
 		breakpoints({
