@@ -15,6 +15,7 @@ pytest = "*"
 moto = "*"
 flask-testing = "*"
 flask-cors = "*"
+pytest-cov = "*"
 
 [dev-packages]
 

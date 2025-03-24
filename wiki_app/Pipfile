@@ -12,6 +12,7 @@ mypy = "*"
 types-requests = "*"
 pytest = "*"
 flask-cors = "*"
+pytest-cov = "*"
 
 [dev-packages]
 

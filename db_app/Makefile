@@ -9,7 +9,13 @@ lint-all:
 	pipenv run mypy db_app.py
 
 test:
-	pipenv run pytest tests/
+	pipenv run pytest --cov=db_app
+
+coverage:
+	pipenv run pytest --cov=db_app --cov-report=html
+
+serve:
+	cd htmlcov && python3 -m http.server 8000
 
 install-env:
 	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
