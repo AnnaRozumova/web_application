@@ -5,6 +5,52 @@ on:
     branches:
       - master  
 jobs:
+  deploy-cdk-infra:
+    runs-on: ubuntu-latest
+
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+
+        - name: Set up Node.js
+          uses: actions/setup-node@v3
+          with:
+            node-version: 20
+
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: 3.11
+
+        - name: Install pipenv
+          run: pip install pipenv
+
+        - name: Install CDK CLI
+          run: npm install -g aws-cdk
+
+        - name: Install Python dependencies
+          run: |
+            cd cdk_infra
+            pipenv install --deploy --ignore-pipfile
+
+        - name: CDK Bootstrap
+          run: |
+            cd cdk_infra
+            pipenv run cdk bootstrap
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION: eu-central-1
+
+        - name: Deploy CDK Stack
+          run: |
+            cd cdk_infra
+            pipenv run cdk deploy --require-approval never
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION: eu-central-1
+
   deploy-microservices:
     runs-on: ubuntu-latest
 
