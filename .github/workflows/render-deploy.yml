@@ -33,24 +33,6 @@ jobs:
             cd cdk_infra
             pipenv install --deploy --ignore-pipfile
 
-        - name: CDK Bootstrap
-          run: |
-            cd cdk_infra
-            pipenv run cdk bootstrap
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION: eu-central-1
-
-        - name: CDK Synth
-          run: |
-            cd cdk_infra
-            pipenv run cdk synth
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION: eu-central-1
-
         - name: Deploy CDK Stack
           run: |
             cd cdk_infra

@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 aws-cdk-lib = "*"
 constructs = "*"
+cfn-lint = "*"
 
 [dev-packages]
 
