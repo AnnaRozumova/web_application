@@ -16,6 +16,7 @@ moto = "*"
 flask-testing = "*"
 flask-cors = "*"
 pytest-cov = "*"
+faker = "*"
 
 [dev-packages]
 

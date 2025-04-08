@@ -23,9 +23,9 @@ dynamodb = boto3.resource(
     aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
     region_name=os.environ.get('AWS_REGION'))
 
-customer_table = dynamodb.Table('customersTest')
-purchase_table = dynamodb.Table("purchasesTest")
-product_table = dynamodb.Table("productsTest")
+customer_table = dynamodb.Table('customers')
+purchase_table = dynamodb.Table("purchases")
+product_table = dynamodb.Table("products")
 
 @app.route('/all-customers', methods=['GET'])
 def list_all_customers() -> tuple[Response, int]:

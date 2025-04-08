@@ -7,38 +7,38 @@ class MinimalStack(Stack):
         super().__init__(scope, id, **kwargs)
 
         # S3 Bucket
-        s3.Bucket(self, "WebcameraTestBucket",
-            bucket_name="webcamera-dev-test-123",
+        s3.Bucket(self, "WebcameraBucket",
+            bucket_name="webcamera-app-dev-65t20mo50",
             versioned=True,
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY
         )
 
         # Customers Table
-        dynamodb.Table(self, "CustomersTableTest",
-            table_name="customersTest",
+        dynamodb.Table(self, "CustomersTable",
+            table_name="customers",
             partition_key=dynamodb.Attribute(
                 name="email",
                 type=dynamodb.AttributeType.STRING
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.RETAIN
         )
 
         # Products table
-        dynamodb.Table(self, "ProductsTableTest",
-            table_name="productsTest",
+        dynamodb.Table(self, "ProductsTable",
+            table_name="products",
             partition_key=dynamodb.Attribute(
                 name="product_name",
                 type=dynamodb.AttributeType.STRING
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.RETAIN
         )
 
         # Purchases table
-        dynamodb.Table(self, "PurchasesTableTest",
-            table_name="purchasesTest",
+        dynamodb.Table(self, "PurchasesTable",
+            table_name="purchases",
             partition_key=dynamodb.Attribute(
                 name="customer_email",
                 type=dynamodb.AttributeType.STRING
@@ -48,5 +48,5 @@ class MinimalStack(Stack):
                 type=dynamodb.AttributeType.STRING
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.RETAIN
         )

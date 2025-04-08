@@ -11,7 +11,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 load_dotenv()
 LOGGER = logging.getLogger(__name__)
 
-S3_BUCKET = 'webcamera-app-hu2119tru05'
+S3_BUCKET = 'webcamera-app-dev-65t20mo50'
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')

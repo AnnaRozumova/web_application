@@ -6,9 +6,9 @@ name = "pypi"
 [packages]
 aws-cdk-lib = "*"
 constructs = "*"
-cfn-lint = "*"
 
 [dev-packages]
+cfn-lint = "*"
 
 [requires]
 python_version = "3.11"
