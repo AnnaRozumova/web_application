@@ -1,6 +1,9 @@
 from aws_cdk import Stack, RemovalPolicy
 from aws_cdk import aws_s3 as s3, aws_dynamodb as dynamodb
+from aws_cdk import aws_lambda as _lambda
+from aws_cdk import aws_apigateway as apigateway
 from constructs import Construct
+import json
 
 class MinimalStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs):
@@ -49,4 +52,66 @@ class MinimalStack(Stack):
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.RETAIN
+        )
+
+        purchases_table = dynamodb.Table.from_table_name(self, "PurchasesTableRef", "purchases")
+
+        search_lambda = _lambda.Function(
+            self, "DBSearchLambda",
+            runtime=_lambda.Runtime.PYTHON_3_11,
+            handler="lambda_function.lambda_handler",
+            code=_lambda.Code.from_asset("../lambda/db_search_app"),
+            environment={
+                "PURCHASES_TABLE_NAME": "purchases"
+            }
+        )
+
+        purchases_table.grant_read_data(search_lambda)
+
+        api = apigateway.RestApi(self, "PurchasesAPI",
+                                rest_api_name="Purchases Service",
+                                description="Simple API to query purchases.")
+        
+        purchases_resource = api.root.add_resource("purchases")
+
+        get_details = purchases_resource.add_resource("get_purchase_details")
+        get_details.add_method(
+            "GET",
+            apigateway.LambdaIntegration(
+                search_lambda,
+                proxy=False,
+                integration_responses=[{"statusCode": "200"}],
+                request_templates={
+                    "application/json": json.dumps({
+                        "action": "get_purchase_details",
+                        "customer_email": "$input.params('email')"
+                    })
+                }
+            ),
+            method_responses=[{
+                "statusCode": "200"
+            }],
+            request_parameters={
+                "method.request.querystring.email": True
+            }
+        )
+
+        get_all = purchases_resource.add_resource("get_all_purchases")
+        get_all.add_method(
+            "GET",
+            apigateway.LambdaIntegration(
+                search_lambda,
+                proxy=False,
+                integration_responses=[{
+                    "statusCode": "200"
+                }],
+                request_templates={
+                    "application/json": json.dumps({
+                        "action": "get_all_purchases"
+                    })
+                }
+            ),
+            method_responses=[{
+                "statusCode": "200"
+            }]
         )
