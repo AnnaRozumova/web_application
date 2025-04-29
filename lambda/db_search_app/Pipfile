@@ -5,7 +5,8 @@ name = "pypi"
 
 [packages]
 boto3 = "*"
-pydantic = "*"
+pydantic = {extras = ["email"], version = "*" }
+pylint = "*"
 
 [dev-packages]
 

@@ -1,4 +1,4 @@
-name: Deploy to Render
+name: Deploy resourses
 
 on:
   push:
@@ -27,6 +27,15 @@ jobs:
 
         - name: Install CDK CLI
           run: npm install -g aws-cdk
+
+        - name: Package Lambda Function with Dependencies
+          working-directory: ./lambda/db_search_app
+          run: |
+            pipenv requirements > requirements.txt
+            mkdir -p dist
+            pip install -r requirements.txt -t dist/
+            cp -r src/ dist/
+            rm requirements.txt
 
         - name: Install Python dependencies
           working-directory: ./cdk_infra

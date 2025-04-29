@@ -1,11 +1,14 @@
+"""CDK infrastructure module for deploying S3 bucket, 
+DynamoDB tables, Lambda function, and API Gateway."""
+import json
 from aws_cdk import Stack, RemovalPolicy
 from aws_cdk import aws_s3 as s3, aws_dynamodb as dynamodb
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_apigateway as apigateway
 from constructs import Construct
-import json
 
 class MinimalStack(Stack):
+    '''CDK Stack'''
     def __init__(self, scope: Construct, id: str, **kwargs):
         super().__init__(scope, id, **kwargs)
 
@@ -59,8 +62,8 @@ class MinimalStack(Stack):
         search_lambda = _lambda.Function(
             self, "DBSearchLambda",
             runtime=_lambda.Runtime.PYTHON_3_11,
-            handler="lambda_function.lambda_handler",
-            code=_lambda.Code.from_asset("../lambda/db_search_app"),
+            handler="src.lambda_function.lambda_handler",
+            code=_lambda.Code.from_asset("../lambda/db_search_app/dist"),
             environment={
                 "PURCHASES_TABLE_NAME": "purchases"
             }
@@ -71,7 +74,6 @@ class MinimalStack(Stack):
         api = apigateway.RestApi(self, "PurchasesAPI",
                                 rest_api_name="Purchases Service",
                                 description="Simple API to query purchases.")
-        
         purchases_resource = api.root.add_resource("purchases")
 
         get_details = purchases_resource.add_resource("get_purchase_details")
